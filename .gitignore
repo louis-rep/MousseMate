@@ -59,7 +59,8 @@ frontend/*.local
 *.tsbuildinfo
 
 # Editor
-.vscode/
+.vscode/*
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo

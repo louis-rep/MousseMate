@@ -1,19 +1,19 @@
-import sys
 import os
+import sys
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
+
 from alembic import context
 
 # Ensure the backend directory is in sys.path so app imports work
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import application settings and Base
-from app.core.config import settings
-from app.db.session import Base
-
 # Import all models so they register with Base.metadata
 import app.models.checkin  # noqa: F401
+from app.core.config import settings
+from app.db.session import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

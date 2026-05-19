@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import datetime, timedelta, date
-from typing import Optional
+from datetime import date, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -10,20 +9,14 @@ from app.models.checkin import CheckIn
 from app.schemas.checkin import CheckInCreate, CheckInUpdate
 
 
-def get_checkin(db: Session, checkin_id: int) -> Optional[CheckIn]:
+def get_checkin(db: Session, checkin_id: int) -> CheckIn | None:
     """Return a single CheckIn by primary key, or None."""
     return db.query(CheckIn).filter(CheckIn.id == checkin_id).first()
 
 
 def list_checkins(db: Session, skip: int = 0, limit: int = 20) -> list[CheckIn]:
     """Return a paginated list of check-ins ordered by most recent first."""
-    return (
-        db.query(CheckIn)
-        .order_by(CheckIn.created_at.desc())
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
+    return db.query(CheckIn).order_by(CheckIn.created_at.desc()).offset(skip).limit(limit).all()
 
 
 def create_checkin(db: Session, data: CheckInCreate) -> CheckIn:
@@ -35,9 +28,7 @@ def create_checkin(db: Session, data: CheckInCreate) -> CheckIn:
     return checkin
 
 
-def update_checkin(
-    db: Session, checkin_id: int, data: CheckInUpdate
-) -> Optional[CheckIn]:
+def update_checkin(db: Session, checkin_id: int, data: CheckInUpdate) -> CheckIn | None:
     """Apply a partial update to an existing check-in. Returns None if not found."""
     checkin = get_checkin(db, checkin_id)
     if checkin is None:

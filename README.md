@@ -85,11 +85,15 @@ Frontend is available at: http://localhost:5173
 
 ---
 
-### 6. Full stack with Docker Compose
+### Daily startup (after first-time setup)
 
 ```bash
-docker compose up
+docker compose up db -d                                              # terminal 1
+cd backend && uv run uvicorn app.main:app --reload --port 8000      # terminal 2
+cd frontend && npm run dev                                           # terminal 3
 ```
+
+`uv sync` and `npm install` are only needed again if dependencies changed.
 
 ---
 
