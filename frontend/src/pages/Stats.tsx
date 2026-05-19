@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getStatsSummary } from "../api/entries";
+import LogBeerModal from "../components/LogBeerModal";
 import type { StatsSummary } from "../types/entry";
 
 interface StatCardProps {
@@ -54,6 +55,7 @@ export default function Stats() {
   const [stats, setStats] = useState<StatsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     getStatsSummary()
@@ -84,7 +86,15 @@ export default function Stats() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-amber-800 mb-6">Your Stats</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-amber-800">Your Stats</h1>
+        <button
+          onClick={() => setModalOpen(true)}
+          className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+        >
+          + Log a beer
+        </button>
+      </div>
 
       {/* Count cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -106,6 +116,10 @@ export default function Stats() {
         <ListCard title="Top Types" items={stats.top_types} emoji="🎨" />
         <ListCard title="Top Names" items={stats.top_names} emoji="🏭" />
       </div>
+
+      {modalOpen && (
+        <LogBeerModal onClose={() => setModalOpen(false)} onSuccess={() => setModalOpen(false)} />
+      )}
     </div>
   );
 }
