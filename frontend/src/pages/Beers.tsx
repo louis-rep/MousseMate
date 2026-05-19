@@ -59,7 +59,7 @@ export default function Beers() {
   return (
     <>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-amber-800">My Beers</h1>
+        <h1 className="text-2xl font-bold text-amber-800">Your Beers</h1>
         <button
           onClick={() => setModalOpen(true)}
           className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"

@@ -27,7 +27,7 @@ function App() {
               }`
             }
           >
-            My Beers
+            Beers
           </NavLink>
         </div>
       </nav>
