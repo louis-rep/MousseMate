@@ -16,14 +16,14 @@ def get_stats_summary(db: Session) -> StatsSummary:
 
     all_entries: list[Entry] = db.query(Entry).all()
 
-    weekly_count = sum(1 for e in all_entries if e.datetime >= week_ago)
-    monthly_count = sum(1 for e in all_entries if e.datetime >= month_ago)
+    weekly_count = sum(1 for e in all_entries if e.drink_datetime >= week_ago)
+    monthly_count = sum(1 for e in all_entries if e.drink_datetime >= month_ago)
 
-    top_styles = [s for s, _ in Counter(e.style for e in all_entries if e.style).most_common(3)]
-    top_breweries = [b for b, _ in Counter(e.brewery for e in all_entries if e.brewery).most_common(3)]
+    top_types = [t for t, _ in Counter(e.type for e in all_entries if e.type).most_common(3)]
+    top_names = [n for n, _ in Counter(e.name for e in all_entries if e.name).most_common(3)]
 
     # Consecutive calendar days ending today with ≥1 entry
-    entry_dates: set[date] = {e.datetime.date() for e in all_entries}
+    entry_dates: set[date] = {e.drink_datetime.date() for e in all_entries}
     streak = 0
     current_day = now.date()
     while current_day in entry_dates:
@@ -33,7 +33,7 @@ def get_stats_summary(db: Session) -> StatsSummary:
     return StatsSummary(
         weekly_count=weekly_count,
         monthly_count=monthly_count,
-        top_styles=top_styles,
-        top_breweries=top_breweries,
+        top_types=top_types,
+        top_names=top_names,
         current_streak_days=streak,
     )

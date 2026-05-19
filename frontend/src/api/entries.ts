@@ -23,21 +23,21 @@ export function listEntries(skip = 0, limit = 20): Promise<Entry[]> {
 }
 
 export function getEntry(id: number): Promise<Entry> {
-  return request<Entry>(`/entries/${id}`);
+  return request<Entry>(`/entry/${id}`);
 }
 
 export function createEntry(data: EntryCreate): Promise<Entry> {
-  return request<Entry>("/entries/", { method: "POST", body: JSON.stringify(data) });
+  return request<Entry>("/entry", { method: "POST", body: JSON.stringify(data) });
 }
 
 export function updateEntry(id: number, data: EntryUpdate): Promise<Entry> {
-  return request<Entry>(`/entries/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  return request<Entry>(`/entry/${id}`, { method: "PATCH", body: JSON.stringify(data) });
 }
 
 export function deleteEntry(id: number): Promise<void> {
-  return request<void>(`/entries/${id}`, { method: "DELETE" });
+  return request<void>(`/entry/${id}`, { method: "DELETE" });
 }
 
 export function getStatsSummary(): Promise<StatsSummary> {
-  return request<StatsSummary>("/entries/stats/summary");
+  return request<StatsSummary>("/entry/stats/summary");
 }

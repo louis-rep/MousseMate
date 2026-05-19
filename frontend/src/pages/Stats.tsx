@@ -103,16 +103,8 @@ export default function Stats() {
 
       {/* Top lists */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <ListCard
-          title="Top Styles"
-          items={stats.top_styles}
-          emoji="🎨"
-        />
-        <ListCard
-          title="Top Breweries"
-          items={stats.top_breweries}
-          emoji="🏭"
-        />
+        <ListCard title="Top Types" items={stats.top_types} emoji="🎨" />
+        <ListCard title="Top Names" items={stats.top_names} emoji="🏭" />
       </div>
     </div>
   );

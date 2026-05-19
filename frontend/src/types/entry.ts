@@ -1,9 +1,9 @@
 export interface Entry {
   id: number;
-  brewery: string;
-  style: string | null;
-  volume: number | null;
-  datetime: string;
+  name: string | null;
+  type: string;
+  volume: number;
+  drink_datetime: string;
   bar: string | null;
   rating: number | null;
   notes: string | null;
@@ -12,20 +12,20 @@ export interface Entry {
 }
 
 export interface EntryCreate {
-  brewery: string;
-  style?: string | null;
-  volume?: number | null;
-  datetime: string;
+  name?: string | null;
+  type: string;
+  volume: number;
+  drink_datetime: string;
   bar?: string | null;
   rating?: number | null;
   notes?: string | null;
 }
 
 export interface EntryUpdate {
-  brewery?: string | null;
-  style?: string | null;
+  name?: string | null;
+  type?: string | null;
   volume?: number | null;
-  datetime?: string | null;
+  drink_datetime?: string | null;
   bar?: string | null;
   rating?: number | null;
   notes?: string | null;
@@ -34,7 +34,7 @@ export interface EntryUpdate {
 export interface StatsSummary {
   weekly_count: number;
   monthly_count: number;
-  top_styles: string[];
-  top_breweries: string[];
+  top_types: string[];
+  top_names: string[];
   current_streak_days: number;
 }

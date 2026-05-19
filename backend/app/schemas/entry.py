@@ -6,10 +6,10 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class EntryBase(BaseModel):
-    brewery: str
-    style: str | None = None
-    volume: float | None = None
-    datetime: datetime
+    name: str | None = None
+    type: str
+    volume: float
+    drink_datetime: datetime
     bar: str | None = None
     rating: float | None = None
     notes: str | None = None
@@ -23,18 +23,14 @@ class EntryBase(BaseModel):
 
 
 class EntryCreate(EntryBase):
-    """Schema for creating a new entry (POST)."""
-
     pass
 
 
 class EntryUpdate(BaseModel):
-    """Schema for partially updating an entry (PATCH) — all fields optional."""
-
-    brewery: str | None = None
-    style: str | None = None
+    name: str | None = None
+    type: str | None = None
     volume: float | None = None
-    datetime: datetime | None = None
+    drink_datetime: datetime | None = None
     bar: str | None = None
     rating: float | None = None
     notes: str | None = None
@@ -48,8 +44,6 @@ class EntryUpdate(BaseModel):
 
 
 class EntryRead(EntryBase):
-    """Schema returned from the API (includes DB-generated fields)."""
-
     id: int
     created_at: datetime
     updated_at: datetime
@@ -58,10 +52,8 @@ class EntryRead(EntryBase):
 
 
 class StatsSummary(BaseModel):
-    """Aggregated stats for all entries."""
-
     weekly_count: int
     monthly_count: int
-    top_styles: list[str]
-    top_breweries: list[str]
+    top_types: list[str]
+    top_names: list[str]
     current_streak_days: int

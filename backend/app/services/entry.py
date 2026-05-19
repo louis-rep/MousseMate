@@ -11,7 +11,7 @@ def get_entry(db: Session, entry_id: int) -> Entry | None:
 
 
 def list_entries(db: Session, skip: int = 0, limit: int = 20) -> list[Entry]:
-    return db.query(Entry).order_by(Entry.datetime.desc()).offset(skip).limit(limit).all()
+    return db.query(Entry).order_by(Entry.drink_datetime.desc()).offset(skip).limit(limit).all()
 
 
 def create_entry(db: Session, data: EntryCreate) -> Entry:

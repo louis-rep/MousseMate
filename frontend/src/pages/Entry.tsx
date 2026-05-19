@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { createEntry } from "../api/entries";
 import type { EntryCreate } from "../types/entry";
 
-const BEER_STYLES = ["IPA", "Stout", "Lager", "Wheat", "Sour", "Pale Ale", "Other"];
+const BEER_TYPES = ["IPA", "Stout", "Lager", "Wheat", "Sour", "Pale Ale", "Other"];
 
 function nowLocalDatetime(): string {
   const now = new Date();
@@ -11,17 +11,17 @@ function nowLocalDatetime(): string {
 }
 
 interface FormState {
-  brewery: string;
-  style: string;
+  name: string;
+  type: string;
   volume: string;
-  datetime: string;
+  drink_datetime: string;
   bar: string;
   rating: string;
   notes: string;
 }
 
 function emptyForm(): FormState {
-  return { brewery: "", style: "", volume: "", datetime: nowLocalDatetime(), bar: "", rating: "", notes: "" };
+  return { name: "", type: "", volume: "", drink_datetime: nowLocalDatetime(), bar: "", rating: "", notes: "" };
 }
 
 export default function Entry() {
@@ -41,18 +41,18 @@ export default function Entry() {
     setLoading(true);
 
     const payload: EntryCreate = {
-      brewery: form.brewery.trim(),
-      style: form.style || null,
-      volume: form.volume !== "" ? parseFloat(form.volume) : null,
-      datetime: new Date(form.datetime).toISOString(),
+      name: form.name.trim() || null,
+      type: form.type,
+      volume: parseFloat(form.volume),
+      drink_datetime: new Date(form.drink_datetime).toISOString(),
       bar: form.bar.trim() || null,
       rating: form.rating !== "" ? parseFloat(form.rating) : null,
       notes: form.notes.trim() || null,
     };
 
     try {
-      const created = await createEntry(payload);
-      setSuccess(`"${created.brewery}" logged successfully!`);
+      await createEntry(payload);
+      setSuccess("Entry logged successfully!");
       setForm(emptyForm());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -74,48 +74,49 @@ export default function Entry() {
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-md p-6 space-y-5">
         <div>
-          <label htmlFor="brewery" className="block text-sm font-medium text-gray-700 mb-1">
-            Brewery <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="brewery"
-            name="brewery"
-            type="text"
-            required
-            value={form.brewery}
-            onChange={handleChange}
-            placeholder="e.g. Guinness"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="style" className="block text-sm font-medium text-gray-700 mb-1">
-            Style
+          <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
+            Type <span className="text-red-500">*</span>
           </label>
           <select
-            id="style"
-            name="style"
-            value={form.style}
+            id="type"
+            name="type"
+            required
+            value={form.type}
             onChange={handleChange}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
           >
-            <option value="">— Select a style —</option>
-            {BEER_STYLES.map((s) => (
-              <option key={s} value={s}>{s}</option>
+            <option value="">— Select a type —</option>
+            {BEER_TYPES.map((t) => (
+              <option key={t} value={t}>{t}</option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            Name
+          </label>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            value={form.name}
+            onChange={handleChange}
+            placeholder="e.g. Guinness Draught"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="volume" className="block text-sm font-medium text-gray-700 mb-1">
-              Volume <span className="text-gray-400 font-normal">(ml)</span>
+              Volume <span className="text-gray-400 font-normal">(ml)</span> <span className="text-red-500">*</span>
             </label>
             <input
               id="volume"
               name="volume"
               type="number"
+              required
               min="0"
               step="10"
               value={form.volume}
@@ -145,15 +146,15 @@ export default function Entry() {
         </div>
 
         <div>
-          <label htmlFor="datetime" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="drink_datetime" className="block text-sm font-medium text-gray-700 mb-1">
             Date & Time <span className="text-red-500">*</span>
           </label>
           <input
-            id="datetime"
-            name="datetime"
+            id="drink_datetime"
+            name="drink_datetime"
             type="datetime-local"
             required
-            value={form.datetime}
+            value={form.drink_datetime}
             onChange={handleChange}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
           />
