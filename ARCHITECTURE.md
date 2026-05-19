@@ -48,6 +48,7 @@ Users log beer check-ins and get personal statistics. Future versions add geoloc
 | Containerization | **Docker Compose** | Two containers: `api` + `db`. Frontend runs natively via Vite dev server locally. |
 | Config | **pydantic-settings** | Type-safe environment variable management. |
 | Python deps | **uv** | Modern package manager, replaces pip+venv. Faster, proper dependency resolution, manages Python versions. |
+| Linting/Formatting | **ruff** | Single tool for both linting and formatting. Replaces black + isort + flake8. |
 
 ---
 
@@ -60,10 +61,13 @@ moussemate/
 ├── .env.example             # Environment variable template (never commit .env)
 ├── .gitignore
 ├── docker-compose.yml       # Defines api + db containers
+├── .vscode/
+│   └── settings.json        # Ruff formatter + Python interpreter (committed)
 │
 ├── backend/
 │   ├── Dockerfile
-│   ├── requirements.txt
+│   ├── pyproject.toml       # uv dependencies + ruff config
+│   ├── uv.lock              # Pinned dependency lockfile (committed)
 │   ├── alembic/             # Database migrations
 │   │   ├── env.py
 │   │   └── versions/
@@ -149,39 +153,58 @@ Base path: `/api/v1`
 
 ```bash
 # backend/.env (never commit — use .env.example as template)
-DATABASE_URL=postgresql://moussemate:moussemate@db:5432/moussemate
+# Use @127.0.0.1:5433 for local dev (Docker db is mapped to host port 5433)
+# Use @db:5432 inside Docker Compose (api container)
+DATABASE_URL=postgresql://moussemate:moussemate@127.0.0.1:5433/moussemate
 ALLOWED_ORIGINS=["http://localhost:5173"]
 DEBUG=true
 ```
+
+> **Note:** The db container is exposed on host port **5433** (not 5432) to avoid conflict with a local PostgreSQL installation that may already be running on 5432.
 
 ---
 
 ## 8. Local Dev Setup
 
+### First-time setup
+
 ```bash
-# 1. Start DB container
+# 1. Copy env template
+cp .env.example backend/.env
+
+# 2. Start DB container
 docker compose up db -d
 
-# 2. Install backend dependencies (first time)
-cd backend && uv sync
-
-# 3. Start API locally with hot reload
-uv run uvicorn app.main:app --reload --port 8000
-
-# 4. Run migrations
+# 3. Install backend dependencies and run migrations
+cd backend
+uv sync
 uv run alembic upgrade head
 
-# 5. Start frontend (native, hot reload)
-cd frontend && npm install && npm run dev
+# 4. Install frontend dependencies
+cd ../frontend && npm install
 ```
 
-**Dependency management (backend):**
-```bash
-# Add a new package
-uv add <package>
+### Daily startup (three terminals)
 
-# Export for Docker
-uv pip compile pyproject.toml -o requirements.txt
+```bash
+docker compose up db -d                                          # terminal 1
+cd backend && uv run uvicorn app.main:app --reload --port 8000  # terminal 2
+cd frontend && npm run dev                                       # terminal 3
+```
+
+### Adding a new migration
+
+```bash
+cd backend
+uv run alembic revision --autogenerate -m "describe the change"
+uv run alembic upgrade head
+```
+
+### Dependency management (backend)
+
+```bash
+uv add <package>        # add a runtime dependency
+uv add --dev <package>  # add a dev dependency
 ```
 
 API available at: `http://localhost:8000`
@@ -198,6 +221,7 @@ API docs (Swagger): `http://localhost:8000/docs`
 - **`.env` is never committed.** `.env.example` documents all required variables.
 - **API versioned from day 1** (`/api/v1/`) to avoid painful refactors later.
 - **Frontend types mirror backend schemas.** Keep `src/types/` in sync manually for now (codegen in future).
+- **Ruff for everything.** Line length 120. Rules: E, F, I, UP, B (B008 ignored — FastAPI DI pattern). Format + lint run automatically on save via VS Code.
 
 ---
 
@@ -221,3 +245,6 @@ API docs (Swagger): `http://localhost:8000/docs`
 | 2026-05-19 | No auth in V1 | Faster to first working product; clean stub planned for V2 |
 | 2026-05-19 | Named MousseMate | "Mousse" = beer foam (FR slang), "Mate" = social drinking buddy |
 | 2026-05-19 | uv for Python deps | Modern standard, faster than pip, proper lockfile, developer already uses it |
+| 2026-05-19 | ruff for linting + formatting | Single tool replaces black + isort + flake8; line-length 120 |
+| 2026-05-19 | Docker db on host port 5433 | Avoid conflict with developer's local PostgreSQL already running on 5432 |
+| 2026-05-19 | Commit .vscode/settings.json | Ensures consistent formatter and interpreter path for all contributors |
