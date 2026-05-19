@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import application settings and Base
 # Import all models so they register with Base.metadata
-import app.models.checkin  # noqa: F401
+import app.models.entry  # noqa: F401
 from app.core.config import settings
 from app.db.session import Base
 

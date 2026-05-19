@@ -5,16 +5,14 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, field_validator
 
 
-class CheckInBase(BaseModel):
-    beer_name: str
-    brewery: str | None = None
+class EntryBase(BaseModel):
+    brewery: str
     style: str | None = None
+    volume: float | None = None
+    datetime: datetime
+    bar: str | None = None
     rating: float | None = None
     notes: str | None = None
-    latitude: float | None = None
-    longitude: float | None = None
-    venue: str | None = None
-    city: str | None = None
 
     @field_validator("rating")
     @classmethod
@@ -24,24 +22,22 @@ class CheckInBase(BaseModel):
         return v
 
 
-class CheckInCreate(CheckInBase):
-    """Schema for creating a new check-in (POST)."""
+class EntryCreate(EntryBase):
+    """Schema for creating a new entry (POST)."""
 
     pass
 
 
-class CheckInUpdate(BaseModel):
-    """Schema for partially updating a check-in (PATCH) — all fields optional."""
+class EntryUpdate(BaseModel):
+    """Schema for partially updating an entry (PATCH) — all fields optional."""
 
-    beer_name: str | None = None
     brewery: str | None = None
     style: str | None = None
+    volume: float | None = None
+    datetime: datetime | None = None
+    bar: str | None = None
     rating: float | None = None
     notes: str | None = None
-    latitude: float | None = None
-    longitude: float | None = None
-    venue: str | None = None
-    city: str | None = None
 
     @field_validator("rating")
     @classmethod
@@ -51,7 +47,7 @@ class CheckInUpdate(BaseModel):
         return v
 
 
-class CheckInRead(CheckInBase):
+class EntryRead(EntryBase):
     """Schema returned from the API (includes DB-generated fields)."""
 
     id: int
@@ -62,7 +58,7 @@ class CheckInRead(CheckInBase):
 
 
 class StatsSummary(BaseModel):
-    """Aggregated stats for the current user's check-ins."""
+    """Aggregated stats for all entries."""
 
     weekly_count: int
     monthly_count: int

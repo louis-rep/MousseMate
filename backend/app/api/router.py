@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from app.api import checkins
+from app.api import entries
 
 router = APIRouter()
 
-router.include_router(checkins.router, prefix="/checkins", tags=["checkins"])
+router.include_router(entries.router, prefix="/entries", tags=["entries"])
