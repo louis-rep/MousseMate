@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getStatsSummary } from "../api/checkins";
-import type { StatsSummary } from "../types/checkin";
+import { getStatsSummary } from "../api/entries";
+import type { StatsSummary } from "../types/entry";
 
 interface StatCardProps {
   label: string;

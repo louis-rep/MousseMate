@@ -1,6 +1,6 @@
 import { Routes, Route, NavLink } from "react-router-dom";
 import Stats from "./pages/Stats";
-import CheckIn from "./pages/CheckIn";
+import Entry from "./pages/Entry";
 
 function App() {
   return (
@@ -25,7 +25,7 @@ function App() {
             Stats
           </NavLink>
           <NavLink
-            to="/checkin"
+            to="/entry"
             className={({ isActive }) =>
               `text-sm font-medium px-3 py-1 rounded transition-colors ${
                 isActive
@@ -43,7 +43,7 @@ function App() {
       <main className="max-w-4xl mx-auto px-4 py-8">
         <Routes>
           <Route path="/" element={<Stats />} />
-          <Route path="/checkin" element={<CheckIn />} />
+          <Route path="/entry" element={<Entry />} />
         </Routes>
       </main>
     </div>
