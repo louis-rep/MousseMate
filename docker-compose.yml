@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: moussemate
       POSTGRES_DB: moussemate
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - moussemate_data:/var/lib/postgresql/data
     healthcheck:
