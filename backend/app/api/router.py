@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import checkins
+from app.api import checkins
 
 router = APIRouter()
 
