@@ -1,5 +1,6 @@
 {
   "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
+  "editor.rulers": [120],
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.ruff": "explicit",
@@ -9,5 +10,10 @@
     "editor.defaultFormatter": "charliermarsh.ruff"
   },
   "ruff.configurationPreference": "filesystemFirst",
-  "python.analysis.typeCheckingMode": "basic"
+  "python.analysis.typeCheckingMode": "basic",
+  "python.linting.enabled": false,
+  "python.linting.flake8Enabled": false,
+  "python.linting.pylintEnabled": false,
+  "flake8.enabled": false,
+  "pylint.enabled": false
 }
