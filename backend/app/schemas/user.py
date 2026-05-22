@@ -21,3 +21,9 @@ class UserRead(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class UserSearchResult(BaseModel):
+    id: int
+    username: str
+    is_following: bool

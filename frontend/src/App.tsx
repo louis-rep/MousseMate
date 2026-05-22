@@ -3,6 +3,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
 import Beers from "./pages/Beers";
 import Login from "./pages/Login";
+import Mates from "./pages/Mates";
 import Register from "./pages/Register";
 import Stats from "./pages/Stats";
 
@@ -41,6 +42,16 @@ function Nav() {
         >
           Beers
         </NavLink>
+        <NavLink
+          to="/mates"
+          className={({ isActive }) =>
+            `text-sm font-medium px-3 py-1 rounded transition-colors ${
+              isActive ? "bg-white text-amber-700" : "text-amber-100 hover:text-white hover:bg-amber-500"
+            }`
+          }
+        >
+          Mates
+        </NavLink>
         <button
           onClick={handleLogout}
           className="ml-auto text-sm font-medium px-3 py-1 rounded text-amber-100 hover:text-white hover:bg-amber-500 transition-colors"
@@ -74,6 +85,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Beers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mates"
+            element={
+              <ProtectedRoute>
+                <Mates />
               </ProtectedRoute>
             }
           />
