@@ -127,6 +127,7 @@ Table: `entry`
 | Field | Type | Notes |
 |---|---|---|
 | id | integer | PK, auto-increment |
+| user_id | integer | FK → `user.id`, required |
 | name | string(255) | Optional (beer name) |
 | type | string(100) | Required (style: IPA, Stout, Lager…) |
 | volume | float | Required (cl) |
@@ -138,7 +139,7 @@ Table: `entry`
 | updated_at | datetime | Auto on update |
 
 **Planned additions:**
-- V2: `venue_id` (FK → `venue` table), `user_id` (FK → `user` table)
+- V2: `venue_id` (FK → `venue` table)
 - V4: `latitude`, `longitude`, `city` (geo fields)
 
 ---

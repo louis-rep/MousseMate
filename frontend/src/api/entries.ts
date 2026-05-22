@@ -1,10 +1,15 @@
 import type { Entry, EntryCreate, EntryUpdate, StatsSummary } from "../types/entry";
 
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "/api/v1";
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "/api";
+
+function authHeaders(): Record<string, string> {
+  const token = localStorage.getItem("access_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json", ...init?.headers },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...init?.headers },
     ...init,
   });
 

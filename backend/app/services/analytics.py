@@ -9,12 +9,12 @@ from app.models.entry import Entry
 from app.schemas.entry import StatsSummary
 
 
-def get_stats_summary(db: Session) -> StatsSummary:
+def get_stats_summary(db: Session, user_id: int) -> StatsSummary:
     now = datetime.now(UTC).replace(tzinfo=None)
     week_ago = now - timedelta(days=7)
     month_ago = now - timedelta(days=30)
 
-    all_entries: list[Entry] = db.query(Entry).all()
+    all_entries: list[Entry] = db.query(Entry).filter(Entry.user_id == user_id).all()
 
     weekly_count = sum(1 for e in all_entries if e.drink_datetime >= week_ago)
     monthly_count = sum(1 for e in all_entries if e.drink_datetime >= month_ago)
