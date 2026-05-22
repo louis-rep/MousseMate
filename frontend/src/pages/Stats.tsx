@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Plot from "react-plotly.js";
 import { getStatsSummary } from "../api/entries";
 import LogBeerModal from "../components/LogBeerModal";
 import type { StatsSummary } from "../types/entry";
@@ -104,9 +105,48 @@ export default function Stats() {
       </div>
 
       {/* Top lists */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <ListCard title="Top Types" items={stats.top_types} emoji="🎨" />
         <ListCard title="Top Names" items={stats.top_names} emoji="🏭" />
+      </div>
+
+      {/* Charts — hidden on small screens where the chart library doesn't render well */}
+      <div className="hidden sm:flex flex-col gap-4">
+        <div className="bg-white rounded-2xl shadow-md p-5">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+            📈 Daily consumption — last 7 days
+          </h3>
+          <Plot
+            data={stats.daily_liters.map((series) => ({
+              type: "bar" as const,
+              name: series.type,
+              x: series.daily.map((d) => d.date),
+              y: series.daily.map((d) => d.liters),
+            }))}
+            layout={{ barmode: "stack", xaxis: { type: "date" }, yaxis: { title: { text: "Liters" } }, margin: { t: 10, r: 10, b: 40, l: 50 }, plot_bgcolor: "transparent", paper_bgcolor: "transparent", autosize: true }}
+            config={{ displayModeBar: false, responsive: true }}
+            style={{ width: "100%" }}
+            useResizeHandler
+          />
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-md p-5">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+            🎨 Liters by style (all time)
+          </h3>
+          <Plot
+            data={stats.liters_by_type.map((series) => ({
+              type: "bar" as const,
+              name: series.bar ?? "No bar",
+              x: series.values.map((v) => v.type),
+              y: series.values.map((v) => v.liters),
+            }))}
+            layout={{ barmode: "stack", yaxis: { title: { text: "Liters" } }, margin: { t: 10, r: 10, b: 60, l: 50 }, plot_bgcolor: "transparent", paper_bgcolor: "transparent", autosize: true }}
+            config={{ displayModeBar: false, responsive: true }}
+            style={{ width: "100%" }}
+            useResizeHandler
+          />
+        </div>
       </div>
 
       {modalOpen && (

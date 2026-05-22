@@ -57,9 +57,31 @@ class VenueRead(BaseModel):
     entries: tuple[EntryRead, ...]
 
 
+class DailyLiters(BaseModel):
+    date: date
+    liters: float
+
+
+class TypeDailyLiters(BaseModel):
+    type: str
+    daily: tuple[DailyLiters, ...]
+
+
+class TypeLiters(BaseModel):
+    type: str
+    liters: float
+
+
+class BarTypeLiters(BaseModel):
+    bar: str | None
+    values: tuple[TypeLiters, ...]
+
+
 class StatsSummary(BaseModel):
     weekly_count: int
     monthly_count: int
     top_types: list[str]
     top_names: list[str]
     total_liters: float
+    daily_liters: tuple[TypeDailyLiters, ...]
+    liters_by_type: tuple[BarTypeLiters, ...]
