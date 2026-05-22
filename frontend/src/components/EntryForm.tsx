@@ -2,7 +2,26 @@ import { useState, type FormEvent } from "react";
 import { createEntry } from "../api/entries";
 import type { EntryCreate } from "../types/entry";
 
-const BEER_TYPES = ["IPA", "Stout", "Lager", "Wheat", "Sour", "Pale Ale", "Other"];
+const BEER_TYPES = [
+  "Blonde",
+  "Ambrée",
+  "Brune",
+  "Blanche",
+  "Rousse",
+  "IPA",
+  "NEIPA",
+  "Pale Ale",
+  "Triple",
+  "Double",
+  "Bière de Garde",
+  "Saison",
+  "Stout",
+  "Porter",
+  "Sour",
+  "Gose",
+  "Lager",
+  "Autre",
+];
 
 function nowLocalDatetime(): string {
   const now = new Date();
