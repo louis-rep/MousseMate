@@ -125,6 +125,7 @@ frontend/src/
 - Use `from __future__ import annotations` in schema files for forward refs
 - Prefer `pathlib.Path` over `os.path`
 - f-strings over `.format()` or `%`
+- `datetime.now(UTC).replace(tzinfo=None)` over `datetime.utcnow()` (deprecated in 3.12+) — import `UTC` from `datetime`
 
 ### Pandas (stub — for future analytics)
 
