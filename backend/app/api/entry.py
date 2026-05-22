@@ -4,21 +4,19 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.entry import EntryCreate, EntryRead, EntryUpdate, StatsSummary
+from app.schemas.entry import EntryCreate, EntryRead, EntryUpdate, StatsSummary, VenueRead
 from app.services import analytics
 from app.services import entry as entry_service
 
 router = APIRouter()
 
 
-@router.get("/entries", response_model=list[EntryRead])
+@router.get("/entries", response_model=tuple[VenueRead, ...])
 def list_entries(
-    skip: int = 0,
-    limit: int = 20,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> list[EntryRead]:
-    return entry_service.list_entries(db, user_id=current_user.id, skip=skip, limit=limit)
+) -> tuple[VenueRead, ...]:
+    return entry_service.list_entries(db, user_id=current_user.id)
 
 
 @router.post("/entry", response_model=EntryRead, status_code=status.HTTP_201_CREATED)

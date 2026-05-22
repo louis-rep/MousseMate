@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
 import { listEntries } from "../api/entries";
 import LogBeerModal from "../components/LogBeerModal";
-import type { Entry } from "../types/entry";
+import type { Entry, Venue } from "../types/entry";
 
-function formatDatetime(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { dateStyle: "long" });
+}
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString(undefined, { timeStyle: "short" });
 }
 
 function EntryCard({ entry }: { entry: Entry }) {
   return (
-    <div className="bg-white rounded-2xl shadow-md p-5 flex flex-col gap-2">
+    <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 flex flex-col gap-2">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-semibold text-gray-800 text-base">
@@ -29,8 +30,7 @@ function EntryCard({ entry }: { entry: Entry }) {
 
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
         <span>{entry.volume} ml</span>
-        {entry.bar && <span>📍 {entry.bar}</span>}
-        <span>🕐 {formatDatetime(entry.drink_datetime)}</span>
+        <span>🕐 {formatTime(entry.drink_datetime)}</span>
       </div>
 
       {entry.notes && <p className="text-sm text-gray-600 italic border-t pt-2 mt-1">{entry.notes}</p>}
@@ -38,16 +38,37 @@ function EntryCard({ entry }: { entry: Entry }) {
   );
 }
 
+function VenueCard({ venue }: { venue: Venue }) {
+  return (
+    <div className="bg-amber-50 rounded-2xl shadow-md border border-amber-200 p-5 flex flex-col gap-3">
+      <div className="flex items-center gap-3">
+        <div>
+          <p className="font-bold text-amber-800 text-base">{venue.bar ?? <span className="italic text-amber-500">No bar</span>}</p>
+          <p className="text-sm text-amber-600">{formatDate(venue.date)}</p>
+        </div>
+        <span className="ml-auto text-xs text-amber-500 font-medium">
+          {venue.entries.length} {venue.entries.length === 1 ? "beer" : "beers"}
+        </span>
+      </div>
+      <div className="flex flex-col gap-2">
+        {venue.entries.map((entry) => (
+          <EntryCard key={entry.id} entry={entry} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Beers() {
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   function load() {
     setLoading(true);
-    listEntries(0, 100)
-      .then(setEntries)
+    listEntries()
+      .then(setVenues)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : "Failed to load entries"))
       .finally(() => setLoading(false));
   }
@@ -55,6 +76,8 @@ export default function Beers() {
   useEffect(() => {
     load();
   }, []);
+
+  const totalBeers = venues.reduce((sum, v) => sum + v.entries.length, 0);
 
   return (
     <>
@@ -78,19 +101,17 @@ export default function Beers() {
         <div className="p-4 rounded-lg bg-red-100 border border-red-300 text-red-800 text-sm">Error: {error}</div>
       )}
 
-      {!loading && !error && entries.length === 0 && (
+      {!loading && !error && totalBeers === 0 && (
         <p className="text-center text-gray-400 italic py-24">No beers logged yet. Time to fix that.</p>
       )}
 
       <div className="flex flex-col gap-4">
-        {entries.map((entry) => (
-          <EntryCard key={entry.id} entry={entry} />
+        {venues.map((venue, i) => (
+          <VenueCard key={i} venue={venue} />
         ))}
       </div>
 
-      {modalOpen && (
-        <LogBeerModal onClose={() => setModalOpen(false)} onSuccess={load} />
-      )}
+      {modalOpen && <LogBeerModal onClose={() => setModalOpen(false)} onSuccess={load} />}
     </>
   );
 }

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -49,6 +49,12 @@ class EntryRead(EntryBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class VenueRead(BaseModel):
+    date: date
+    bar: str | None
+    entries: tuple[EntryRead, ...]
 
 
 class StatsSummary(BaseModel):

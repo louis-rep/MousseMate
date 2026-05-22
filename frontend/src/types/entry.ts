@@ -31,6 +31,12 @@ export interface EntryUpdate {
   notes?: string | null;
 }
 
+export interface Venue {
+  date: string;
+  bar: string | null;
+  entries: Entry[];
+}
+
 export interface StatsSummary {
   weekly_count: number;
   monthly_count: number;

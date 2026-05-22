@@ -1,4 +1,4 @@
-import type { Entry, EntryCreate, EntryUpdate, StatsSummary } from "../types/entry";
+import type { Entry, EntryCreate, EntryUpdate, StatsSummary, Venue } from "../types/entry";
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "/api";
 
@@ -23,8 +23,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export function listEntries(skip = 0, limit = 20): Promise<Entry[]> {
-  return request<Entry[]>(`/entries?skip=${skip}&limit=${limit}`);
+export function listEntries(): Promise<Venue[]> {
+  return request<Venue[]>("/entries");
 }
 
 export function getEntry(id: number): Promise<Entry> {

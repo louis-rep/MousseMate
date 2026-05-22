@@ -122,21 +122,27 @@ frontend/src/
 
 **General:**
 - Python 3.12+ — use modern syntax: `str | None` over `Optional[str]`, `list[str]` over `List[str]`
+- **Pydantic collections: use `tuple[Model, ...]` not `list[Model]`** for any field or return type that holds a sequence of Pydantic models — in schemas, service signatures, and endpoint signatures. Internally you may build a `list` and `return tuple(...)` at the end.
 - Use `from __future__ import annotations` in schema files for forward refs
 - Prefer `pathlib.Path` over `os.path`
 - f-strings over `.format()` or `%`
 - `datetime.now(UTC).replace(tzinfo=None)` over `datetime.utcnow()` (deprecated in 3.12+) — import `UTC` from `datetime`
 
-### Pandas (stub — for future analytics)
-
-> Not yet used. These rules apply when pandas work is added (V1+ stats, data exploration).
+### Pandas
 
 - Prefer `pd.read_sql` with SQLAlchemy engine over manual cursor iteration when loading data for analysis
 - Use `dtype` hints on `read_sql` / `read_csv` — don't rely on pandas type inference
-- Never use `df.iterrows()` — use vectorized operations or `df.apply()` if needed
+- Never use `df.iterrows()` — use vectorized operations or `df.to_dict("records")` to build output lists
 - Prefer `query()` for readable filtering over boolean indexing chains
 - Name DataFrames descriptively (`entries_df`, not `df`) when multiple frames coexist
 - Return plain dicts/lists from service functions, not DataFrames — keep pandas internal to analytics layer
+- **Column access: always use dotted notation.** Brackets are reserved for column creation or non-plain-string column names:
+  ```python
+  entries_df["new_col"] = entries_df.a + entries_df.b   # OK — creation
+  entries_df[col_name] = entries_df[other_col_name]      # OK — variable name
+  assert (entries_df.a == entries_df.b).all()            # OK — dotted read
+  assert (entries_df["a"] == entries_df["b"]).all()      # NOT OK — brackets on plain string read
+  ```
 
 ---
 
