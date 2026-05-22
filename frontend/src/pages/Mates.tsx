@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { followUser, listMates, searchUsers, unfollowUser } from "../api/follow";
 import type { UserRead } from "../types/auth";
 import type { UserSearchResult } from "../types/user";
@@ -70,19 +71,23 @@ export default function Mates() {
         <div className="flex flex-col gap-2 mb-6">
           {results.map((r) => (
             <div key={r.username} className="flex items-center justify-between bg-white rounded-xl border border-amber-100 shadow-sm px-4 py-3">
-              <span className="text-gray-800 font-medium text-sm">{r.username}</span>
-              {r.is_following ? (
-                <span className="text-xs font-medium bg-amber-100 text-amber-700 px-3 py-1 rounded-full">
-                  Following
-                </span>
-              ) : (
-                <button
-                  onClick={() => handleFollow(r.id)}
-                  className="text-sm font-bold text-amber-600 hover:text-amber-800 transition-colors"
-                >
-                  +
-                </button>
-              )}
+              <Link to={`/profile/${r.id}`} className="text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-800 px-3 py-1 rounded-full hover:bg-amber-100 transition-colors">
+                {r.username}
+              </Link>
+              <div className="flex items-center gap-3">
+                {r.is_following ? (
+                  <span className="text-xs font-medium bg-amber-100 text-amber-700 px-3 py-1 rounded-full">
+                    Following
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => handleFollow(r.id)}
+                    className="text-sm font-bold text-amber-600 hover:text-amber-800 transition-colors"
+                  >
+                    +
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -95,7 +100,9 @@ export default function Mates() {
         <div className="flex flex-col gap-2">
           {mates.map((mate) => (
             <div key={mate.username} className="flex items-center justify-between bg-white rounded-xl border border-amber-100 shadow-sm px-4 py-3">
-              <span className="text-gray-800 font-medium text-sm">{mate.username}</span>
+              <Link to={`/profile/${mate.id}`} className="text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-800 px-3 py-1 rounded-full hover:bg-amber-100 transition-colors">
+                {mate.username}
+              </Link>
               <button
                 onClick={() => handleUnfollow(mate.id)}
                 className="text-xs text-gray-400 hover:text-red-500 transition-colors"
