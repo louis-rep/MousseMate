@@ -16,7 +16,7 @@ export default function Login() {
     setLoading(true);
     try {
       await login(username, password);
-      navigate("/beers");
+      navigate("/");
     } catch (err) {
       const message = err instanceof Error ? err.message : "";
       setError(message.includes("401") ? "Invalid username or password." : "Login failed. Please try again.");

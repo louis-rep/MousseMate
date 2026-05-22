@@ -137,7 +137,7 @@ export default function Profile() {
               x: series.daily.map((d) => d.date),
               y: series.daily.map((d) => d.liters),
             }))}
-            layout={{ barmode: "stack", xaxis: { type: "date" }, yaxis: { title: { text: "Liters" } }, margin: { t: 10, r: 10, b: 40, l: 50 }, plot_bgcolor: "transparent", paper_bgcolor: "transparent", autosize: true }}
+            layout={{ height: 280, barmode: "stack", xaxis: { type: "date" }, yaxis: { title: { text: "Liters" } }, margin: { t: 10, r: 10, b: 40, l: 50 }, plot_bgcolor: "transparent", paper_bgcolor: "transparent", autosize: true }}
             config={{ displayModeBar: false, responsive: true }}
             style={{ width: "100%" }}
             useResizeHandler
@@ -155,7 +155,7 @@ export default function Profile() {
               x: series.values.map((v) => v.type),
               y: series.values.map((v) => v.liters),
             }))}
-            layout={{ barmode: "stack", yaxis: { title: { text: "Liters" } }, margin: { t: 10, r: 10, b: 60, l: 50 }, plot_bgcolor: "transparent", paper_bgcolor: "transparent", autosize: true }}
+            layout={{ height: 280, barmode: "stack", yaxis: { title: { text: "Liters" } }, margin: { t: 10, r: 10, b: 60, l: 50 }, plot_bgcolor: "transparent", paper_bgcolor: "transparent", autosize: true }}
             config={{ displayModeBar: false, responsive: true }}
             style={{ width: "100%" }}
             useResizeHandler
