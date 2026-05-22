@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import Plot from "react-plotly.js";
+import Plotly from "plotly.js-dist-min";
+import createPlotlyComponent from "react-plotly.js/factory";
+
+const Plot = createPlotlyComponent(Plotly as Parameters<typeof createPlotlyComponent>[0]);
 import { getStatsSummary } from "../api/entries";
 import LogBeerModal from "../components/LogBeerModal";
 import type { StatsSummary } from "../types/entry";
