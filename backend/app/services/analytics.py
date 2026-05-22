@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -10,7 +10,7 @@ from app.schemas.entry import StatsSummary
 
 
 def get_stats_summary(db: Session) -> StatsSummary:
-    now = datetime.utcnow()
+    now = datetime.now(UTC).replace(tzinfo=None)
     week_ago = now - timedelta(days=7)
     month_ago = now - timedelta(days=30)
 

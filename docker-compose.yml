@@ -32,5 +32,23 @@ services:
       - ./backend:/app
     command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
+  db_test:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: moussemate
+      POSTGRES_PASSWORD: moussemate
+      POSTGRES_DB: moussemate_test
+    ports:
+      - "5434:5432"
+    volumes:
+      - moussemate_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moussemate"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   moussemate_data:
+  moussemate_test_data:
