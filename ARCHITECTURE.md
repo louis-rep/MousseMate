@@ -17,22 +17,28 @@ Users log beer check-ins and get personal statistics. Future versions add geoloc
 
 ## 2. Roadmap
 
-### V1 — Core Loop
-- Log a beer check-in (name, brewery, style, rating, notes, timestamp)
-- Personal stats dashboard: weekly/monthly counts, streaks, favorite styles, top breweries
+### V1 — Core Loop *(in progress)*
+- Log a beer entry (name, type/style, volume, bar, rating, notes, timestamp)
+- Personal stats dashboard: weekly/monthly counts, streaks, top styles, top names
 - Responsive webapp (mobile-friendly in Chrome, no native app needed)
 - Single user (no auth yet)
 
-### V2 — Geo
-- Capture GPS coordinates at check-in time (groundwork laid in V1 schema)
-- Heatmap of check-in locations
-- City/venue achievements (gamification)
+### V2 — Multi-user & Venues
+- Authentication system (multi-user, session-based or JWT)
+- Venue system: multiple entries on the same day at the same bar are grouped in the frontend
+- Paris bar database: scrape bar listings to power venue autocomplete and discovery
+- Introduce pytest test suite for backend services
 
 ### V3 — Social
-- Multi-user + authentication
-- Friend graph
+- Friendship system (friend requests, friend graph)
+- Cross-friends venue system: see when friends are/were at the same bar
 - Shared feed (see what friends are drinking)
-- "Drinking together" feature (co-check-in)
+
+### V4 — Geo & Analytics
+- GPS capture at entry time
+- Heatmap of entry locations
+- Spatial analytics (city trends, radius-based discovery)
+- City/venue achievements (gamification)
 
 ---
 
@@ -57,6 +63,7 @@ Users log beer check-ins and get personal statistics. Future versions add geoloc
 ```
 moussemate/
 ├── ARCHITECTURE.md          # This file
+├── CLAUDE.md                # AI assistant operational guide
 ├── README.md
 ├── .env.example             # Environment variable template (never commit .env)
 ├── .gitignore
@@ -78,16 +85,15 @@ moussemate/
 │       ├── db/
 │       │   └── session.py   # SQLAlchemy engine, SessionLocal, Base, get_db()
 │       ├── models/          # SQLAlchemy ORM models
-│       │   └── checkin.py
+│       │   └── entry.py
 │       ├── schemas/         # Pydantic request/response schemas
-│       │   └── checkin.py
+│       │   └── entry.py
 │       ├── services/        # Business logic (no DB calls in routers)
-│       │   └── checkin.py
+│       │   ├── entry.py     # CRUD logic
+│       │   └── analytics.py # Stats logic
 │       ├── api/
-│       │   └── v1/
-│       │       ├── router.py        # Aggregates all endpoint routers
-│       │       └── endpoints/
-│       │           └── checkins.py  # CRUD + stats endpoints
+│       │   ├── router.py    # Aggregates all endpoint routers
+│       │   └── entry.py     # Entry CRUD + stats endpoints
 │       └── tests/
 │
 └── frontend/
@@ -99,11 +105,13 @@ moussemate/
     └── src/
         ├── main.tsx
         ├── App.tsx
-        ├── api/             # Typed API client (fetch wrappers)
-        ├── components/      # Reusable UI components
-        ├── pages/           # Route-level page components
-        │   ├── CheckIn.tsx  # Log a beer
-        │   └── Stats.tsx    # Dashboard
+        ├── api/             # Typed fetch wrappers (one file per resource)
+        ├── components/
+        │   ├── EntryForm.tsx    # Log entry form fields
+        │   └── LogBeerModal.tsx # Modal wrapper around EntryForm
+        ├── pages/
+        │   ├── Beers.tsx    # My Beers list page
+        │   └── Stats.tsx    # Dashboard / stats
         ├── hooks/           # Custom React hooks
         └── types/           # TypeScript interfaces mirroring backend schemas
 ```
@@ -112,40 +120,42 @@ moussemate/
 
 ## 5. Data Model
 
-### CheckIn (V1, geo-ready for V2)
+### Entry (V1)
+
+Table: `entry`
 
 | Field | Type | Notes |
 |---|---|---|
 | id | integer | PK, auto-increment |
-| beer_name | string | Required |
-| brewery | string | Optional |
-| style | string | Optional (IPA, Stout, Lager…) |
+| name | string(255) | Optional (beer name) |
+| type | string(100) | Required (style: IPA, Stout, Lager…) |
+| volume | float | Required (cl) |
+| drink_datetime | datetime | Required |
+| bar | text | Optional (venue/bar name) |
 | rating | float | Optional, 0.0–5.0 |
 | notes | text | Optional free text |
-| latitude | float | Optional, for V2 geo |
-| longitude | float | Optional, for V2 geo |
-| venue | string | Optional, bar/place name |
-| city | string | Optional |
-| created_at | timestamp | Auto, server-side |
-| updated_at | timestamp | Auto on update |
+| created_at | datetime | Auto, server-side |
+| updated_at | datetime | Auto on update |
 
-**V2 additions (not yet in schema):** `user_id` (FK), `co_checkin_ids` (social)
+**Planned additions:**
+- V2: `venue_id` (FK → `venue` table), `user_id` (FK → `user` table)
+- V4: `latitude`, `longitude`, `city` (geo fields)
 
 ---
 
 ## 6. API Design
 
-Base path: `/api/v1`
+Base path: `/api`
 
 | Method | Path | Description |
 |---|---|---|
 | GET | `/health` | Health check |
-| POST | `/checkins` | Log a new beer |
-| GET | `/checkins` | List check-ins (paginated) |
-| GET | `/checkins/{id}` | Get single check-in |
-| PATCH | `/checkins/{id}` | Update a check-in |
-| DELETE | `/checkins/{id}` | Delete a check-in |
-| GET | `/checkins/stats/summary` | Weekly/monthly stats |
+| POST | `/entries` | Log a new entry |
+| GET | `/entries` | List entries |
+| GET | `/entries/{id}` | Get single entry |
+| PATCH | `/entries/{id}` | Update an entry |
+| DELETE | `/entries/{id}` | Delete an entry |
+| GET | `/entries/stats/summary` | Weekly/monthly stats |
 
 ---
 
@@ -219,7 +229,7 @@ API docs (Swagger): `http://localhost:8000/docs`
 - **Schemas ≠ Models.** Pydantic schemas for I/O, SQLAlchemy models for DB. Never mix.
 - **Migrations via Alembic.** Never use `Base.metadata.create_all()` in production.
 - **`.env` is never committed.** `.env.example` documents all required variables.
-- **API versioned from day 1** (`/api/v1/`) to avoid painful refactors later.
+- **API base path is `/api`** (no version prefix for now — will add `/v1` when a breaking change requires it).
 - **Frontend types mirror backend schemas.** Keep `src/types/` in sync manually for now (codegen in future).
 - **Ruff for everything.** Line length 120. Rules: E, F, I, UP, B (B008 ignored — FastAPI DI pattern). Format + lint run automatically on save via VS Code.
 
@@ -241,7 +251,7 @@ API docs (Swagger): `http://localhost:8000/docs`
 | 2026-05-19 | FastAPI over Django | API-only backend, no templates needed, modern async support |
 | 2026-05-19 | React over Angular | Lighter weight, better fit for small app, more transferable |
 | 2026-05-19 | 2 containers (api + db) | DB always separate; frontend runs natively in dev |
-| 2026-05-19 | Geo fields in V1 schema | Avoid migration pain when V2 geo features land |
+| 2026-05-19 | Geo fields deferred to V4 | V2/V3 focus on users and social; geo added once core social loop is stable |
 | 2026-05-19 | No auth in V1 | Faster to first working product; clean stub planned for V2 |
 | 2026-05-19 | Named MousseMate | "Mousse" = beer foam (FR slang), "Mate" = social drinking buddy |
 | 2026-05-19 | uv for Python deps | Modern standard, faster than pip, proper lockfile, developer already uses it |
