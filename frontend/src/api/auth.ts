@@ -24,3 +24,11 @@ export function login(username: string, password: string): Promise<Token> {
 export function register(username: string, password: string): Promise<UserRead> {
   return request<UserRead>("/auth/register", { username, password });
 }
+
+export async function getMe(): Promise<UserRead> {
+  const token = localStorage.getItem("access_token");
+  const r = await fetch(`${BASE_URL}/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return r.json() as Promise<UserRead>;
+}

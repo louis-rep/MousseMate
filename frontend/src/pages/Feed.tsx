@@ -2,35 +2,32 @@ import { useEffect, useState } from "react";
 import { listEntries } from "../api/entries";
 import LogBeerModal from "../components/LogBeerModal";
 import VenueCard from "../components/VenueCard";
-import { useAuth } from "../hooks/useAuth";
 import type { Venue } from "../types/entry";
 
-export default function Beers() {
-  const { userId } = useAuth();
+export default function Feed() {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   function load() {
-    if (userId === null) return;
     setLoading(true);
-    listEntries(userId)
+    listEntries()
       .then(setVenues)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : "Failed to load entries"))
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : "Failed to load feed"))
       .finally(() => setLoading(false));
   }
 
   useEffect(() => {
     load();
-  }, [userId]);
+  }, []);
 
   const totalBeers = venues.reduce((sum, v) => sum + v.entries.length, 0);
 
   return (
     <>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-amber-800">My Beers</h1>
+        <h1 className="text-2xl font-bold text-amber-800">Feed</h1>
         <button
           onClick={() => setModalOpen(true)}
           className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
@@ -50,7 +47,7 @@ export default function Beers() {
       )}
 
       {!loading && !error && totalBeers === 0 && (
-        <p className="text-center text-gray-400 italic py-24">No beers logged yet. Time to fix that.</p>
+        <p className="text-center text-gray-400 italic py-24">Nothing here yet. Follow some mates or log your first beer.</p>
       )}
 
       <div className="flex flex-col gap-4">

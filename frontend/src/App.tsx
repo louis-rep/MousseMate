@@ -1,7 +1,8 @@
-import { Navigate, NavLink, Route, Routes, useNavigate } from "react-router-dom";
+import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
 import Beers from "./pages/Beers";
+import Feed from "./pages/Feed";
 import Login from "./pages/Login";
 import Mates from "./pages/Mates";
 import Register from "./pages/Register";
@@ -21,7 +22,20 @@ function Nav() {
   return (
     <nav className="bg-amber-600 shadow-md">
       <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-6">
-        <span className="text-white font-bold text-xl tracking-tight">🍺 MousseMate</span>
+        <NavLink to="/" className="text-white font-bold text-xl tracking-tight hover:opacity-80 transition-opacity">
+          🍺 MousseMate
+        </NavLink>
+        <NavLink
+          to="/"
+          end
+          className={({ isActive }) =>
+            `text-sm font-medium px-3 py-1 rounded transition-colors ${
+              isActive ? "bg-white text-amber-700" : "text-amber-100 hover:text-white hover:bg-amber-500"
+            }`
+          }
+        >
+          Feed
+        </NavLink>
         <NavLink
           to="/stats"
           className={({ isActive }) =>
@@ -40,7 +54,7 @@ function Nav() {
             }`
           }
         >
-          Beers
+          My Beers
         </NavLink>
         <NavLink
           to="/mates"
@@ -69,7 +83,14 @@ export default function App() {
       <Nav />
       <main className="max-w-4xl mx-auto px-4 py-8">
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Feed />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route

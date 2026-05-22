@@ -27,7 +27,7 @@ class TestVenueGrouping(BaseTestDatabase):
         return [entry_service.create_entry(self.db, e, user_id=self.user.id) for e in entries]
 
     def _venues(self):
-        return entry_service.list_entries(self.db, user_id=self.user.id)
+        return entry_service.list_entries(self.db, current_user_id=self.user.id, user_id=self.user.id)
 
     # --- basic grouping ---
 

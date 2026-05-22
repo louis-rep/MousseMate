@@ -13,10 +13,11 @@ router = APIRouter()
 
 @router.get("/entries", response_model=tuple[VenueRead, ...])
 def list_entries(
+    user_id: int | None = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> tuple[VenueRead, ...]:
-    return entry_service.list_entries(db, user_id=current_user.id)
+    return entry_service.list_entries(db, current_user_id=current_user.id, user_id=user_id)
 
 
 @router.post("/entry", response_model=EntryRead, status_code=status.HTTP_201_CREATED)

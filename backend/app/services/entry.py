@@ -4,19 +4,32 @@ import pandas as pd
 from sqlalchemy.orm import Session
 
 from app.models.entry import Entry
+from app.models.user import User
 from app.schemas.entry import EntryCreate, EntryRead, EntryUpdate, VenueRead
+from app.services import follow as follow_service
 
 
 def get_entry(db: Session, entry_id: int, user_id: int) -> Entry | None:
     return db.query(Entry).filter(Entry.id == entry_id, Entry.user_id == user_id).first()
 
 
-def list_entries(db: Session, user_id: int) -> tuple[VenueRead, ...]:
-    entries = db.query(Entry).filter(Entry.user_id == user_id).all()
+def list_entries(db: Session, current_user_id: int, user_id: int | None = None) -> tuple[VenueRead, ...]:
+    if user_id is None:
+        mates = follow_service.list_following(db, current_user_id)
+        user_ids = [current_user_id, *(m.id for m in mates)]
+    else:
+        user_ids = [user_id]
+
+    entries = db.query(Entry).filter(Entry.user_id.in_(user_ids)).all()
     if not entries:
         return ()
 
-    entries_df = pd.DataFrame([EntryRead.model_validate(e).model_dump() for e in entries])
+    users = db.query(User).filter(User.id.in_(user_ids)).all()
+    user_map = {u.id: u.username for u in users}
+
+    raw = [{"user_id": e.user_id, **EntryRead.model_validate(e).model_dump()} for e in entries]
+    entries_df = pd.DataFrame(raw)
+    entries_df["username"] = entries_df.user_id.map(user_map)
     entries_df["drink_date"] = entries_df.drink_datetime.dt.date
     entries_df = entries_df.sort_values(
         ["drink_date", "bar", "drink_datetime"],

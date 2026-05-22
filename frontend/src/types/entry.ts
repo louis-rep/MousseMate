@@ -7,6 +7,7 @@ export interface Entry {
   bar: string | null;
   rating: number | null;
   notes: string | null;
+  username: string | null;
   created_at: string;
   updated_at: string;
 }

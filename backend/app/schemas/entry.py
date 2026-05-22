@@ -45,6 +45,7 @@ class EntryUpdate(BaseModel):
 
 class EntryRead(EntryBase):
     id: int
+    username: str | None = None
     created_at: datetime
     updated_at: datetime
 

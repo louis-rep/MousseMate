@@ -23,8 +23,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export function listEntries(): Promise<Venue[]> {
-  return request<Venue[]>("/entries");
+export function listEntries(userId?: number): Promise<Venue[]> {
+  return request<Venue[]>(userId !== undefined ? `/entries?user_id=${userId}` : "/entries");
 }
 
 export function getEntry(id: number): Promise<Entry> {

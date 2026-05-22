@@ -63,26 +63,38 @@ class TestListEntries(BaseTestDatabase):
         self.user = user_service.create_user(self.db, UserCreate(username="testuser", password="pass"))
 
     def test_returns_all_entries(self) -> None:
-        entry_service.create_entry(self.db, _make_entry(), user_id=self.user.id)
-        entry_service.create_entry(self.db, _make_entry(), user_id=self.user.id)
-        entries = entry_service.list_entries(self.db, user_id=self.user.id)
-        self.assertEqual(len(entries), 2)
+        entry_service.create_entry(self.db, _make_entry(bar="Pub A"), user_id=self.user.id)
+        entry_service.create_entry(self.db, _make_entry(bar="Pub B"), user_id=self.user.id)
+        venues = entry_service.list_entries(self.db, current_user_id=self.user.id, user_id=self.user.id)
+        total = sum(len(v.entries) for v in venues)
+        self.assertEqual(total, 2)
 
     def test_empty_when_none_created(self) -> None:
-        entries = entry_service.list_entries(self.db, user_id=self.user.id)
-        self.assertEqual(entries, [])
-
-    def test_respects_limit(self) -> None:
-        for _ in range(5):
-            entry_service.create_entry(self.db, _make_entry(), user_id=self.user.id)
-        entries = entry_service.list_entries(self.db, user_id=self.user.id, limit=2)
-        self.assertEqual(len(entries), 2)
+        result = entry_service.list_entries(self.db, current_user_id=self.user.id, user_id=self.user.id)
+        self.assertEqual(result, ())
 
     def test_does_not_return_other_users_entries(self) -> None:
         other = user_service.create_user(self.db, UserCreate(username="other", password="pass"))
         entry_service.create_entry(self.db, _make_entry(), user_id=other.id)
-        entries = entry_service.list_entries(self.db, user_id=self.user.id)
-        self.assertEqual(entries, [])
+        result = entry_service.list_entries(self.db, current_user_id=self.user.id, user_id=self.user.id)
+        self.assertEqual(result, ())
+
+    def test_feed_includes_mates_entries(self) -> None:
+        from app.services import follow as follow_service
+
+        other = user_service.create_user(self.db, UserCreate(username="other", password="pass"))
+        follow_service.follow_user(self.db, follower_id=self.user.id, followed_id=other.id)
+        entry_service.create_entry(self.db, _make_entry(bar="Pub"), user_id=self.user.id)
+        entry_service.create_entry(self.db, _make_entry(bar="Pub"), user_id=other.id)
+        venues = entry_service.list_entries(self.db, current_user_id=self.user.id, user_id=None)
+        total = sum(len(v.entries) for v in venues)
+        self.assertEqual(total, 2)
+
+    def test_feed_excludes_non_mates(self) -> None:
+        other = user_service.create_user(self.db, UserCreate(username="other", password="pass"))
+        entry_service.create_entry(self.db, _make_entry(bar="Pub"), user_id=other.id)
+        venues = entry_service.list_entries(self.db, current_user_id=self.user.id, user_id=None)
+        self.assertEqual(venues, ())
 
 
 class TestUpdateEntry(BaseTestDatabase):
