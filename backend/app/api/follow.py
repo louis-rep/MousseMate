@@ -24,6 +24,18 @@ def search_users(
     return follow_service.search_users(db, query=q.strip(), current_user_id=current_user.id)
 
 
+@router.get("/users/{user_id}", response_model=UserRead)
+def get_user(
+    user_id: int,
+    _: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    user = user_service.get_by_id(db, user_id)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} not found")
+    return user
+
+
 @router.get("/mates", response_model=tuple[UserRead, ...])
 def list_mates(
     current_user: User = Depends(get_current_user),

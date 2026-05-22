@@ -1,15 +1,14 @@
 import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
-import Beers from "./pages/Beers";
 import Feed from "./pages/Feed";
 import Login from "./pages/Login";
 import Mates from "./pages/Mates";
+import Profile from "./pages/Profile";
 import Register from "./pages/Register";
-import Stats from "./pages/Stats";
 
 function Nav() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, userId, logout } = useAuth();
   const navigate = useNavigate();
 
   function handleLogout() {
@@ -36,26 +35,18 @@ function Nav() {
         >
           Feed
         </NavLink>
-        <NavLink
-          to="/stats"
-          className={({ isActive }) =>
-            `text-sm font-medium px-3 py-1 rounded transition-colors ${
-              isActive ? "bg-white text-amber-700" : "text-amber-100 hover:text-white hover:bg-amber-500"
-            }`
-          }
-        >
-          Stats
-        </NavLink>
-        <NavLink
-          to="/beers"
-          className={({ isActive }) =>
-            `text-sm font-medium px-3 py-1 rounded transition-colors ${
-              isActive ? "bg-white text-amber-700" : "text-amber-100 hover:text-white hover:bg-amber-500"
-            }`
-          }
-        >
-          My Beers
-        </NavLink>
+        {userId !== null && (
+          <NavLink
+            to={`/profile/${userId}`}
+            className={({ isActive }) =>
+              `text-sm font-medium px-3 py-1 rounded transition-colors ${
+                isActive ? "bg-white text-amber-700" : "text-amber-100 hover:text-white hover:bg-amber-500"
+              }`
+            }
+          >
+            My Profile
+          </NavLink>
+        )}
         <NavLink
           to="/mates"
           className={({ isActive }) =>
@@ -94,18 +85,10 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route
-            path="/stats"
+            path="/profile/:userId"
             element={
               <ProtectedRoute>
-                <Stats />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/beers"
-            element={
-              <ProtectedRoute>
-                <Beers />
+                <Profile />
               </ProtectedRoute>
             }
           />

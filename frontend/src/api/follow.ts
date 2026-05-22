@@ -24,6 +24,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+export function getUser(userId: number): Promise<UserRead> {
+  return request<UserRead>(`/users/${userId}`);
+}
+
 export function searchUsers(q: string): Promise<UserSearchResult[]> {
   return request<UserSearchResult[]>(`/users/search?q=${encodeURIComponent(q)}`);
 }

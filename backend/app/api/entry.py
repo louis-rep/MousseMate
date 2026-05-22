@@ -32,10 +32,11 @@ def create_entry(
 # NOTE: /entry/stats/summary MUST be registered before /entry/{entry_id}
 @router.get("/entry/stats/summary", response_model=StatsSummary)
 def get_stats_summary(
+    user_id: int | None = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> StatsSummary:
-    return analytics.get_stats_summary(db, user_id=current_user.id)
+    return analytics.get_stats_summary(db, user_id=user_id if user_id is not None else current_user.id)
 
 
 @router.get("/entry/{entry_id}", response_model=EntryRead)

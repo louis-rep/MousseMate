@@ -1,19 +1,17 @@
 import { useEffect, useState } from "react";
 import Plotly from "plotly.js-dist-min";
 import createPlotlyComponent from "react-plotly.js/factory";
-
 const Plot = createPlotlyComponent(Plotly as Parameters<typeof createPlotlyComponent>[0]);
-import { getStatsSummary } from "../api/entries";
+import { useParams } from "react-router-dom";
+import { getStatsSummary, listEntries } from "../api/entries";
+import { getUser } from "../api/follow";
 import LogBeerModal from "../components/LogBeerModal";
-import type { StatsSummary } from "../types/entry";
+import VenueCard from "../components/VenueCard";
+import { useAuth } from "../hooks/useAuth";
+import type { StatsSummary, Venue } from "../types/entry";
+import type { UserRead } from "../types/auth";
 
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  emoji: string;
-}
-
-function StatCard({ label, value, emoji }: StatCardProps) {
+function StatCard({ label, value, emoji }: { label: string; value: string | number; emoji: string }) {
   return (
     <div className="bg-white rounded-2xl shadow-md p-5 flex items-center gap-4">
       <span className="text-3xl">{emoji}</span>
@@ -25,13 +23,7 @@ function StatCard({ label, value, emoji }: StatCardProps) {
   );
 }
 
-interface ListCardProps {
-  title: string;
-  items: string[];
-  emoji: string;
-}
-
-function ListCard({ title, items, emoji }: ListCardProps) {
+function ListCard({ title, items, emoji }: { title: string; items: string[]; emoji: string }) {
   return (
     <div className="bg-white rounded-2xl shadow-md p-5">
       <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
@@ -55,25 +47,40 @@ function ListCard({ title, items, emoji }: ListCardProps) {
   );
 }
 
-export default function Stats() {
+export default function Profile() {
+  const { userId: userIdParam } = useParams<{ userId: string }>();
+  const userId = parseInt(userIdParam ?? "0", 10);
+  const { userId: currentUserId } = useAuth();
+  const isOwnProfile = userId === currentUserId;
+
+  const [user, setUser] = useState<UserRead | null>(null);
   const [stats, setStats] = useState<StatsSummary | null>(null);
+  const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  useEffect(() => {
-    getStatsSummary()
-      .then(setStats)
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : "Failed to load stats")
-      )
+  function load() {
+    setLoading(true);
+    setError(null);
+    Promise.all([getUser(userId), getStatsSummary(userId), listEntries(userId)])
+      .then(([u, s, v]) => {
+        setUser(u);
+        setStats(s);
+        setVenues(v);
+      })
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : "Failed to load profile"))
       .finally(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(() => {
+    if (userId) load();
+  }, [userId]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="text-amber-600 text-lg animate-pulse">Loading stats…</div>
+        <div className="text-amber-600 text-lg animate-pulse">Loading…</div>
       </div>
     );
   }
@@ -86,21 +93,25 @@ export default function Stats() {
     );
   }
 
-  if (!stats) return null;
+  if (!stats || !user) return null;
+
+  const totalBeers = venues.reduce((sum, v) => sum + v.entries.length, 0);
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-amber-800">Your Stats</h1>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-        >
-          + Log a beer
-        </button>
+        <h1 className="text-2xl font-bold text-amber-800">{user.username}</h1>
+        {isOwnProfile && (
+          <button
+            onClick={() => setModalOpen(true)}
+            className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+          >
+            + Log a beer
+          </button>
+        )}
       </div>
 
-      {/* Count cards */}
+      {/* Stats cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <StatCard label="This week" value={stats.weekly_count} emoji="📅" />
         <StatCard label="This month" value={stats.monthly_count} emoji="🗓️" />
@@ -113,8 +124,8 @@ export default function Stats() {
         <ListCard title="Top Names" items={stats.top_names} emoji="🏭" />
       </div>
 
-      {/* Charts — hidden on small screens where the chart library doesn't render well */}
-      <div className="hidden sm:flex flex-col gap-4">
+      {/* Charts */}
+      <div className="hidden sm:flex flex-col gap-4 mb-6">
         <div className="bg-white rounded-2xl shadow-md p-5">
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
             📈 Daily consumption — last 7 days
@@ -152,8 +163,19 @@ export default function Stats() {
         </div>
       </div>
 
+      {/* Beer list */}
+      {totalBeers === 0 ? (
+        <p className="text-center text-gray-400 italic py-16">No beers logged yet.</p>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {venues.map((venue, i) => (
+            <VenueCard key={i} venue={venue} />
+          ))}
+        </div>
+      )}
+
       {modalOpen && (
-        <LogBeerModal onClose={() => setModalOpen(false)} onSuccess={() => setModalOpen(false)} />
+        <LogBeerModal onClose={() => setModalOpen(false)} onSuccess={() => { setModalOpen(false); load(); }} />
       )}
     </div>
   );

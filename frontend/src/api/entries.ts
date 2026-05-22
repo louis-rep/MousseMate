@@ -43,6 +43,6 @@ export function deleteEntry(id: number): Promise<void> {
   return request<void>(`/entry/${id}`, { method: "DELETE" });
 }
 
-export function getStatsSummary(): Promise<StatsSummary> {
-  return request<StatsSummary>("/entry/stats/summary");
+export function getStatsSummary(userId: number): Promise<StatsSummary> {
+  return request<StatsSummary>(`/entry/stats/summary?user_id=${userId}`);
 }
