@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -22,18 +22,12 @@ def get_stats_summary(db: Session, user_id: int) -> StatsSummary:
     top_types = [t for t, _ in Counter(e.type for e in all_entries if e.type).most_common(3)]
     top_names = [n for n, _ in Counter(e.name for e in all_entries if e.name).most_common(3)]
 
-    # Consecutive calendar days ending today with ≥1 entry
-    entry_dates: set[date] = {e.drink_datetime.date() for e in all_entries}
-    streak = 0
-    current_day = now.date()
-    while current_day in entry_dates:
-        streak += 1
-        current_day -= timedelta(days=1)
+    total_liters = round(sum(e.volume for e in all_entries) / 1000, 2)
 
     return StatsSummary(
         weekly_count=weekly_count,
         monthly_count=monthly_count,
         top_types=top_types,
         top_names=top_names,
-        current_streak_days=streak,
+        total_liters=total_liters,
     )

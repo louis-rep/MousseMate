@@ -100,15 +100,7 @@ export default function Stats() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <StatCard label="This week" value={stats.weekly_count} emoji="📅" />
         <StatCard label="This month" value={stats.monthly_count} emoji="🗓️" />
-        <StatCard
-          label="Current streak"
-          value={
-            stats.current_streak_days === 1
-              ? "1 day"
-              : `${stats.current_streak_days} days`
-          }
-          emoji="🔥"
-        />
+        <StatCard label="Total drunk" value={`${stats.total_liters} L`} emoji="🍺" />
       </div>
 
       {/* Top lists */}

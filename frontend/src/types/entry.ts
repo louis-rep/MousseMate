@@ -42,5 +42,5 @@ export interface StatsSummary {
   monthly_count: number;
   top_types: string[];
   top_names: string[];
-  current_streak_days: number;
+  total_liters: number;
 }

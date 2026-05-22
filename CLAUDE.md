@@ -73,7 +73,7 @@ Table: `entry`
 | id | integer | PK, auto-increment |
 | name | string(255) | Optional (beer name) |
 | type | string(100) | Required (style: IPA, Stout…) |
-| volume | float | Required (cl) |
+| volume | float | Required (mL) |
 | drink_datetime | datetime | Required |
 | bar | text | Optional (venue name) |
 | rating | float | Optional, 0.0–5.0 |

@@ -62,4 +62,4 @@ class StatsSummary(BaseModel):
     monthly_count: int
     top_types: list[str]
     top_names: list[str]
-    current_streak_days: int
+    total_liters: float
