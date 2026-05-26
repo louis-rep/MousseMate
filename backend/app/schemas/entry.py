@@ -46,6 +46,8 @@ class EntryUpdate(BaseModel):
 class EntryRead(EntryBase):
     id: int
     username: str | None = None
+    like_count: int = 0
+    liked_by_me: bool = False
     created_at: datetime
     updated_at: datetime
 

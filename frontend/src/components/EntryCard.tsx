@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { cheerEntry, uncheerEntry } from "../api/entries";
 import type { Entry } from "../types/entry";
 
 function formatTime(iso: string): string {
@@ -5,6 +7,25 @@ function formatTime(iso: string): string {
 }
 
 export default function EntryCard({ entry }: { entry: Entry }) {
+  const [liked, setLiked] = useState(entry.liked_by_me);
+  const [count, setCount] = useState(entry.like_count);
+
+  async function handleCheer() {
+    const wasLiked = liked;
+    setLiked(!wasLiked);
+    setCount((c) => (wasLiked ? c - 1 : c + 1));
+    try {
+      if (wasLiked) {
+        await uncheerEntry(entry.id);
+      } else {
+        await cheerEntry(entry.id);
+      }
+    } catch {
+      setLiked(wasLiked);
+      setCount((c) => (wasLiked ? c + 1 : c - 1));
+    }
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-amber-100 p-4 flex flex-col gap-2">
       <div className="flex items-start justify-between gap-2">
@@ -30,6 +51,22 @@ export default function EntryCard({ entry }: { entry: Entry }) {
       </div>
 
       {entry.notes && <p className="text-sm text-gray-600 italic border-t pt-2 mt-1">{entry.notes}</p>}
+
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          onClick={handleCheer}
+          className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border transition-colors ${
+            liked
+              ? "bg-amber-600 text-white border-amber-600"
+              : "bg-amber-50 text-amber-600 border-amber-200 hover:border-amber-400"
+          }`}
+        >
+          🍺 Cheers
+        </button>
+        {count > 0 && (
+          <span className="text-xs text-amber-600 font-medium">{count}</span>
+        )}
+      </div>
     </div>
   );
 }

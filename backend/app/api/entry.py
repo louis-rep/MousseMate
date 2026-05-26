@@ -3,10 +3,12 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
+from app.models.entry import Entry as EntryModel
 from app.models.user import User
 from app.schemas.entry import EntryCreate, EntryRead, EntryUpdate, StatsSummary, VenueRead
 from app.services import analytics
 from app.services import entry as entry_service
+from app.services import like as like_service
 
 router = APIRouter()
 
@@ -72,3 +74,26 @@ def delete_entry(
 ) -> None:
     if not entry_service.delete_entry(db, entry_id, user_id=current_user.id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Entry {entry_id} not found")
+
+
+# NOTE: cheer endpoints must be registered after /entry/{entry_id} DELETE/GET/PATCH
+@router.post("/entry/{entry_id}/cheer", status_code=status.HTTP_201_CREATED)
+def cheer_entry(
+    entry_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    if db.query(EntryModel).filter(EntryModel.id == entry_id).first() is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Entry {entry_id} not found")
+    if like_service.like_entry(db, user_id=current_user.id, entry_id=entry_id) is None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Already cheered")
+
+
+@router.delete("/entry/{entry_id}/cheer", status_code=status.HTTP_204_NO_CONTENT)
+def uncheer_entry(
+    entry_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    if not like_service.unlike_entry(db, user_id=current_user.id, entry_id=entry_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not cheered")

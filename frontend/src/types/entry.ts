@@ -8,6 +8,8 @@ export interface Entry {
   rating: number | null;
   notes: string | null;
   username: string | null;
+  like_count: number;
+  liked_by_me: boolean;
   created_at: string;
   updated_at: string;
 }

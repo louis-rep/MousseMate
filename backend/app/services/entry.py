@@ -7,6 +7,7 @@ from app.models.entry import Entry
 from app.models.user import User
 from app.schemas.entry import EntryCreate, EntryRead, EntryUpdate, VenueRead
 from app.services import follow as follow_service
+from app.services import like as like_service
 
 
 def get_entry(db: Session, entry_id: int, user_id: int) -> Entry | None:
@@ -27,9 +28,15 @@ def list_entries(db: Session, current_user_id: int, user_id: int | None = None) 
     users = db.query(User).filter(User.id.in_(user_ids)).all()
     user_map = {u.id: u.username for u in users}
 
+    entry_ids = [e.id for e in entries]
+    like_counts = like_service.get_like_counts(db, entry_ids)
+    liked_ids = like_service.get_liked_entry_ids(db, current_user_id, entry_ids)
+
     raw = [{"user_id": e.user_id, **EntryRead.model_validate(e).model_dump()} for e in entries]
     entries_df = pd.DataFrame(raw)
     entries_df["username"] = entries_df.user_id.map(user_map)
+    entries_df["like_count"] = entries_df.id.map(like_counts).fillna(0).astype(int)
+    entries_df["liked_by_me"] = entries_df.id.isin(liked_ids)
     entries_df["drink_date"] = entries_df.drink_datetime.dt.date
     entries_df = entries_df.sort_values(
         ["drink_date", "bar", "drink_datetime"],

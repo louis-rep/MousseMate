@@ -46,3 +46,11 @@ export function deleteEntry(id: number): Promise<void> {
 export function getStatsSummary(userId: number): Promise<StatsSummary> {
   return request<StatsSummary>(`/entry/stats/summary?user_id=${userId}`);
 }
+
+export function cheerEntry(id: number): Promise<void> {
+  return request<void>(`/entry/${id}/cheer`, { method: "POST" });
+}
+
+export function uncheerEntry(id: number): Promise<void> {
+  return request<void>(`/entry/${id}/cheer`, { method: "DELETE" });
+}
