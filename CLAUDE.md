@@ -4,9 +4,13 @@
 
 ---
 
-## Current phase: V1
+## Current phase: V2 — Bars referential
 
-We are in **V1 — Core Loop**. Do not build toward V2 (geo) or V3 (auth, social) unless explicitly asked. No multi-user, no JWT, no PostGIS.
+**V1 (core loop) and V3 (auth, social) are done**: JWT auth, follows (mates), likes (cheers), feed. Current work is the **bar referential**: a `bar` table sourced from OpenStreetMap, scoped to **Paris** for now.
+
+> **TODO(scale):** the bar referential aims to become France-wide, then global. Anything bar-related (queries, sync, schema) should be written so that adding cities is a data change, not a code rewrite — but do not build multi-city UI/config until asked.
+
+No PostGIS yet — plain float lat/lng columns.
 
 ---
 
@@ -30,15 +34,29 @@ API: http://localhost:8000 · Swagger: http://localhost:8000/docs · Frontend: h
 ```
 backend/app/
 ├── main.py              # App entrypoint, CORS, router registration
-├── core/config.py       # Pydantic settings (reads .env)
+├── core/
+│   ├── config.py        # Pydantic settings (reads .env)
+│   └── security.py      # Password hashing, JWT creation
 ├── db/session.py        # Engine, SessionLocal, Base, get_db()
-├── models/entry.py      # SQLAlchemy ORM model
-├── schemas/entry.py     # Pydantic schemas (EntryCreate, EntryUpdate, EntryRead, StatsSummary)
-├── services/entry.py    # CRUD logic
-├── services/analytics.py# Stats logic
-└── api/
-    ├── router.py        # Aggregates all endpoint routers
-    └── entry.py         # Entry endpoints
+├── models/              # SQLAlchemy ORM models: entry, user, user_follow, like, bar
+├── schemas/             # Pydantic schemas: entry, user, bar
+├── services/
+│   ├── entry.py         # Entry CRUD + feed grouping
+│   ├── analytics.py     # Stats logic
+│   ├── user.py          # User CRUD
+│   ├── follow.py        # Mates (follow) logic
+│   ├── like.py          # Cheers (like) logic
+│   ├── bar.py           # Bar search + OSM↔DB sync reconciliation
+│   └── osm.py           # Overpass API client (network only, no DB)
+├── api/
+│   ├── router.py        # Aggregates all endpoint routers
+│   ├── deps.py          # get_current_user dependency
+│   ├── auth.py          # /auth/register, /auth/login, /auth/me
+│   ├── entry.py         # Entry endpoints
+│   ├── follow.py        # Mates endpoints
+│   └── bar.py           # GET /bars search
+└── (backend/scripts/)
+    └── sync_osm_bars.py # OSM → DB bar sync (run manually)
 ```
 
 **Conventions:**
@@ -71,17 +89,49 @@ Table: `entry`
 | Column | Type | Notes |
 |---|---|---|
 | id | integer | PK, auto-increment |
+| user_id | integer | FK → user.id, required |
 | name | string(255) | Optional (beer name) |
 | type | string(100) | Required (style: IPA, Stout…) |
 | volume | float | Required (mL) |
 | drink_datetime | datetime | Required |
-| bar | text | Optional (venue name) |
+| bar | text | Optional (venue name, free text — not yet linked to `bar` table) |
 | rating | float | Optional, 0.0–5.0 |
 | notes | text | Optional |
 | created_at | datetime | Server default |
 | updated_at | datetime | Auto on update |
 
-Geo fields (`latitude`, `longitude`, `city`) and `user_id` are **V2/V3** — not in schema yet.
+Table: `user` — id, username (unique), hashed_password, created_at
+Table: `user_follow` — (follower_id, followed_id) composite PK, created_at
+Table: `user_entry_like` — (user_id, entry_id) composite PK, created_at
+
+Table: `bar` (OSM referential — see "Bar referential" below)
+
+| Column | Type | Notes |
+|---|---|---|
+| id | integer | PK, auto-increment |
+| osm_id | bigint | OSM element id |
+| osm_type | string(10) | `node` / `way` / `relation` — unique with osm_id |
+| name | string(255) | Required (unnamed OSM elements are skipped) |
+| amenity | string(50) | `bar`, `pub`, `restaurant` |
+| latitude / longitude | float | Required |
+| address | string(500) | Optional (`addr:housenumber` + `addr:street`) |
+| postcode | string(10) | Optional — arrondissement for Paris |
+| city | string(100) | `"Paris"` for now — TODO(scale): France/global |
+| is_closed | boolean | Default false — set by sync when bar disappears from OSM |
+| created_at / updated_at | datetime | Same pattern as `entry` |
+
+---
+
+## Bar referential & OSM sync
+
+- **Single source: OpenStreetMap** (Overpass API). Never scrape Google Maps; never store Google Places data.
+- Scope: amenity `bar` / `pub` / `restaurant` inside the Paris admin boundary. **TODO(scale):** parameterize area by city/country for France-wide, then global coverage.
+- Sync is a **reconciliation**, not a re-import (`backend/scripts/sync_osm_bars.py`, run with `uv run python scripts/sync_osm_bars.py` from `backend/`):
+  - in OSM, not in DB → insert
+  - in both → update name / amenity / address / postcode / lat / lng if changed; reopen if it was closed
+  - in DB, not in OSM → `is_closed = true` (never delete — entries may reference the bar)
+  - safety guard: abort without writing if OSM returns < 70% of the open bars currently in DB (protects against partial Overpass responses)
+- Network code (Overpass client) lives in `services/osm.py`; DB reconciliation in `services/bar.py` — keep them separate so the sync logic is testable without network.
 
 ---
 
@@ -94,11 +144,17 @@ Geo fields (`latitude`, `longitude`, `city`) and `user_id` are **V2/V3** — not
 frontend/src/
 ├── App.tsx              # Router setup
 ├── pages/
-│   ├── Beers.tsx        # My Beers list page
-│   └── Stats.tsx        # Dashboard / stats
+│   ├── Feed.tsx         # Main feed (own + mates' entries, grouped by venue)
+│   ├── Login.tsx        # Login page
+│   ├── Register.tsx     # Registration page
+│   ├── Mates.tsx        # Follow / mates management
+│   └── Profile.tsx      # User profile / stats
 ├── components/
 │   ├── EntryForm.tsx    # Log entry form (fields)
-│   └── LogBeerModal.tsx # Modal wrapper around EntryForm
+│   ├── LogBeerModal.tsx # Modal wrapper around EntryForm
+│   ├── EntryCard.tsx    # Single entry display (with Cheers button)
+│   ├── VenueCard.tsx    # Venue grouping of entries in the feed
+│   └── ProtectedRoute.tsx # Auth guard for routes
 ├── api/                 # Typed fetch wrappers (one file per resource)
 ├── hooks/               # Custom React hooks
 └── types/               # TypeScript interfaces mirroring backend schemas
