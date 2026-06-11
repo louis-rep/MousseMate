@@ -15,4 +15,8 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    // vite >=5.4.12 rejects unknown Host headers by default; allow the Railway domain
+    allowedHosts: true,
+  },
 });

@@ -11,8 +11,11 @@ COPY pyproject.toml .
 # Install dependencies (production only)
 RUN uv sync --no-dev
 
-# Copy application source
+# Copy application source, migrations, and ops scripts
 COPY app ./app
+COPY alembic.ini ./
+COPY alembic ./alembic
+COPY scripts ./scripts
 
 EXPOSE 8000
 
