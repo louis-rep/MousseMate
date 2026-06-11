@@ -26,9 +26,10 @@ const BEER_TYPES = [
 ];
 
 function nowLocalDatetime(): string {
+  // datetime-local inputs expect local wall time; toISOString() alone would shift to UTC
   const now = new Date();
   now.setSeconds(0, 0);
-  return now.toISOString().slice(0, 16);
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 
 interface FormState {

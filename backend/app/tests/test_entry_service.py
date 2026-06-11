@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
@@ -49,6 +49,24 @@ class TestCreateEntry(EntryTestBase):
     def test_scopes_to_user(self) -> None:
         entry = entry_service.create_entry(self.db, _make_entry(self.bar.id), user_id=self.user.id)
         self.assertEqual(entry.user_id, self.user.id)
+
+    def test_aware_drink_datetime_is_stored_as_naive_utc(self) -> None:
+        cest = timezone(timedelta(hours=2))
+        data = _make_entry(self.bar.id, drink_datetime=datetime(2026, 6, 11, 20, 30, tzinfo=cest))
+        entry = entry_service.create_entry(self.db, data, user_id=self.user.id)
+        self.assertEqual(entry.drink_datetime, datetime(2026, 6, 11, 18, 30))
+        self.assertIsNone(entry.drink_datetime.tzinfo)
+
+    def test_entry_read_json_marks_datetimes_as_utc(self) -> None:
+        from app.schemas.entry import EntryRead
+
+        data = _make_entry(self.bar.id, drink_datetime=datetime(2026, 6, 11, 18, 30))
+        entry = entry_service.create_entry(self.db, data, user_id=self.user.id)
+        payload = EntryRead.model_validate(entry).model_dump_json()
+        self.assertIn('"drink_datetime":"2026-06-11T18:30:00Z"', payload)
+        # python-mode dumps stay naive (the pandas feed pipeline relies on this)
+        dumped = EntryRead.model_validate(entry).model_dump()
+        self.assertIsNone(dumped["drink_datetime"].tzinfo)
 
 
 class TestGetEntry(EntryTestBase):

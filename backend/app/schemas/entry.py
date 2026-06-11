@@ -1,8 +1,15 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_serializer, field_validator
+
+
+def _to_naive_utc(v: datetime) -> datetime:
+    """Datetimes are stored timezone-unaware in UTC; aware inputs are converted, naive ones trusted as UTC."""
+    if v.tzinfo is not None:
+        return v.astimezone(UTC).replace(tzinfo=None)
+    return v
 
 
 class EntryBase(BaseModel):
@@ -13,6 +20,11 @@ class EntryBase(BaseModel):
     bar_id: int
     rating: float | None = None
     notes: str | None = None
+
+    @field_validator("drink_datetime")
+    @classmethod
+    def normalize_drink_datetime(cls, v: datetime) -> datetime:
+        return _to_naive_utc(v)
 
     @field_validator("rating")
     @classmethod
@@ -35,6 +47,11 @@ class EntryUpdate(BaseModel):
     rating: float | None = None
     notes: str | None = None
 
+    @field_validator("drink_datetime")
+    @classmethod
+    def normalize_drink_datetime(cls, v: datetime | None) -> datetime | None:
+        return None if v is None else _to_naive_utc(v)
+
     @field_validator("rating")
     @classmethod
     def validate_rating(cls, v: float | None) -> float | None:
@@ -52,6 +69,12 @@ class EntryRead(EntryBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+    # JSON only: tag the naive-UTC values with +00:00 so browsers convert to local
+    # time; python-mode dumps (the pandas pipeline) keep them naive.
+    @field_serializer("drink_datetime", "created_at", "updated_at", when_used="json")
+    def serialize_as_utc(self, v: datetime) -> datetime:
+        return v.replace(tzinfo=UTC)
 
 
 class VenueRead(BaseModel):
