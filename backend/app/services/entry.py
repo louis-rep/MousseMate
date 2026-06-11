@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 from sqlalchemy.orm import Session
 
+from app.models.bar import Bar
 from app.models.entry import Entry
 from app.models.user import User
 from app.schemas.entry import EntryCreate, EntryRead, EntryUpdate, VenueRead
@@ -28,6 +29,9 @@ def list_entries(db: Session, current_user_id: int, user_id: int | None = None) 
     users = db.query(User).filter(User.id.in_(user_ids)).all()
     user_map = {u.id: u.username for u in users}
 
+    bar_ids = {e.bar_id for e in entries}
+    bar_names = dict(db.query(Bar.id, Bar.name).filter(Bar.id.in_(bar_ids)).all())
+
     entry_ids = [e.id for e in entries]
     like_counts = like_service.get_like_counts(db, entry_ids)
     liked_ids = like_service.get_liked_entry_ids(db, current_user_id, entry_ids)
@@ -35,17 +39,18 @@ def list_entries(db: Session, current_user_id: int, user_id: int | None = None) 
     raw = [{"user_id": e.user_id, **EntryRead.model_validate(e).model_dump()} for e in entries]
     entries_df = pd.DataFrame(raw)
     entries_df["username"] = entries_df.user_id.map(user_map)
+    entries_df["bar"] = entries_df.bar_id.map(bar_names)
     entries_df["like_count"] = entries_df.id.map(like_counts).fillna(0).astype(int)
     entries_df["liked_by_me"] = entries_df.id.isin(liked_ids)
     entries_df["drink_date"] = entries_df.drink_datetime.dt.date
     entries_df = entries_df.sort_values(
         ["drink_date", "bar", "drink_datetime"],
         ascending=[False, True, True],
-        na_position="last",
     ).reset_index(drop=True)
 
+    # group on bar_id (not name) so two distinct bars sharing a name stay separate venues
     entries_df["venue_id"] = (
-        (entries_df.bar != entries_df.bar.shift()) | (entries_df.drink_date != entries_df.drink_date.shift())
+        (entries_df.bar_id != entries_df.bar_id.shift()) | (entries_df.drink_date != entries_df.drink_date.shift())
     ).cumsum()
 
     venues: list[VenueRead] = []
@@ -53,10 +58,7 @@ def list_entries(db: Session, current_user_id: int, user_id: int | None = None) 
         group_sorted = group.sort_values("drink_datetime")
         records = group_sorted.astype(object).where(pd.notna(group_sorted), other=None).to_dict("records")
         venue_entries = tuple(EntryRead.model_validate(r) for r in records)
-        bar = group.bar.iloc[0]
-        venues.append(
-            VenueRead(date=group.drink_date.iloc[0], bar=bar if pd.notna(bar) else None, entries=venue_entries)
-        )
+        venues.append(VenueRead(date=group.drink_date.iloc[0], bar=group.bar.iloc[0], entries=venue_entries))
 
     return tuple(venues)
 

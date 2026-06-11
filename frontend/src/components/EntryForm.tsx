@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { createEntry } from "../api/entries";
 import type { EntryCreate } from "../types/entry";
+import type { Bar } from "../types/bar";
+import BarAutocomplete from "./BarAutocomplete";
 
 const BEER_TYPES = [
   "Blonde",
@@ -34,13 +36,12 @@ interface FormState {
   type: string;
   volume: string;
   drink_datetime: string;
-  bar: string;
   rating: string;
   notes: string;
 }
 
 function emptyForm(): FormState {
-  return { name: "", type: "", volume: "", drink_datetime: nowLocalDatetime(), bar: "", rating: "", notes: "" };
+  return { name: "", type: "", volume: "", drink_datetime: nowLocalDatetime(), rating: "", notes: "" };
 }
 
 interface Props {
@@ -49,6 +50,9 @@ interface Props {
 
 export default function EntryForm({ onSuccess }: Props) {
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [bar, setBar] = useState<Bar | null>(null);
+  // remounts BarAutocomplete after a successful submit to clear its text
+  const [barResetKey, setBarResetKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +63,11 @@ export default function EntryForm({ onSuccess }: Props) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!bar) {
+      setError("Please pick a bar from the suggestions.");
+      return;
+    }
     setLoading(true);
 
     const payload: EntryCreate = {
@@ -66,7 +75,7 @@ export default function EntryForm({ onSuccess }: Props) {
       type: form.type,
       volume: parseFloat(form.volume),
       drink_datetime: new Date(form.drink_datetime).toISOString(),
-      bar: form.bar.trim() || null,
+      bar_id: bar.id,
       rating: form.rating !== "" ? parseFloat(form.rating) : null,
       notes: form.notes.trim() || null,
     };
@@ -74,6 +83,8 @@ export default function EntryForm({ onSuccess }: Props) {
     try {
       await createEntry(payload);
       setForm(emptyForm());
+      setBar(null);
+      setBarResetKey((k) => k + 1);
       onSuccess?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -177,17 +188,9 @@ export default function EntryForm({ onSuccess }: Props) {
 
       <div>
         <label htmlFor="bar" className="block text-sm font-medium text-gray-700 mb-1">
-          Bar
+          Bar <span className="text-red-500">*</span>
         </label>
-        <input
-          id="bar"
-          name="bar"
-          type="text"
-          value={form.bar}
-          onChange={handleChange}
-          placeholder="e.g. The Local"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-        />
+        <BarAutocomplete key={barResetKey} selected={bar} onSelect={setBar} />
       </div>
 
       <div>

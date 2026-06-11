@@ -151,7 +151,7 @@ export default function Profile() {
           <Plot
             data={stats.liters_by_type.map((series) => ({
               type: "bar" as const,
-              name: series.bar ?? "No bar",
+              name: series.bar,
               x: series.values.map((v) => v.type),
               y: series.values.map((v) => v.liters),
             }))}

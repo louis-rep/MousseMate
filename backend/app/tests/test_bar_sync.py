@@ -76,6 +76,15 @@ class TestSyncBars(BaseTestDatabase):
         self.assertEqual(self.db.query(Bar).count(), 1)
         self.assertEqual(self._get_bar().name, "Le Comptoir")
 
+    def test_manual_bars_are_never_closed(self) -> None:
+        manual = Bar(osm_id=0, osm_type="manual", name="Unknown bar", amenity="bar", latitude=48.85, longitude=2.35)
+        self.db.add(manual)
+        self.db.commit()
+        counts = bar_service.sync_bars(self.db, [])
+        self.assertEqual(counts["closed"], 0)
+        self.db.refresh(manual)
+        self.assertFalse(manual.is_closed)
+
     def test_other_city_is_left_alone(self) -> None:
         bar_service.sync_bars(self.db, [_element(99, city="Lyon")], city="Lyon")
         counts = bar_service.sync_bars(self.db, [_element()], city="Paris")

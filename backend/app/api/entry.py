@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.db.session import get_db
+from app.models.bar import Bar
 from app.models.entry import Entry as EntryModel
 from app.models.user import User
 from app.schemas.entry import EntryCreate, EntryRead, EntryUpdate, StatsSummary, VenueRead
@@ -28,6 +29,8 @@ def create_entry(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> EntryRead:
+    if db.query(Bar.id).filter(Bar.id == data.bar_id).first() is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Bar {data.bar_id} not found")
     return entry_service.create_entry(db, data, user_id=current_user.id)
 
 
@@ -60,6 +63,8 @@ def update_entry(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> EntryRead:
+    if data.bar_id is not None and db.query(Bar.id).filter(Bar.id == data.bar_id).first() is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Bar {data.bar_id} not found")
     entry = entry_service.update_entry(db, entry_id, data, user_id=current_user.id)
     if entry is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Entry {entry_id} not found")

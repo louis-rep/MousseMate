@@ -4,7 +4,7 @@ export interface Entry {
   type: string;
   volume: number;
   drink_datetime: string;
-  bar: string | null;
+  bar_id: number;
   rating: number | null;
   notes: string | null;
   username: string | null;
@@ -19,7 +19,7 @@ export interface EntryCreate {
   type: string;
   volume: number;
   drink_datetime: string;
-  bar?: string | null;
+  bar_id: number;
   rating?: number | null;
   notes?: string | null;
 }
@@ -29,14 +29,14 @@ export interface EntryUpdate {
   type?: string | null;
   volume?: number | null;
   drink_datetime?: string | null;
-  bar?: string | null;
+  bar_id?: number | null;
   rating?: number | null;
   notes?: string | null;
 }
 
 export interface Venue {
   date: string;
-  bar: string | null;
+  bar: string; // bar name, joined from the bar referential
   entries: Entry[];
 }
 
@@ -56,7 +56,7 @@ export interface TypeLiters {
 }
 
 export interface BarTypeLiters {
-  bar: string | null;
+  bar: string; // bar name, joined from the bar referential
   values: TypeLiters[];
 }
 

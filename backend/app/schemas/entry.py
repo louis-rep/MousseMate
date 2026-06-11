@@ -10,7 +10,7 @@ class EntryBase(BaseModel):
     type: str
     volume: float
     drink_datetime: datetime
-    bar: str | None = None
+    bar_id: int
     rating: float | None = None
     notes: str | None = None
 
@@ -31,7 +31,7 @@ class EntryUpdate(BaseModel):
     type: str | None = None
     volume: float | None = None
     drink_datetime: datetime | None = None
-    bar: str | None = None
+    bar_id: int | None = None
     rating: float | None = None
     notes: str | None = None
 
@@ -56,7 +56,7 @@ class EntryRead(EntryBase):
 
 class VenueRead(BaseModel):
     date: date
-    bar: str | None
+    bar: str  # bar name, joined from the bar referential
     entries: tuple[EntryRead, ...]
 
 
@@ -76,7 +76,7 @@ class TypeLiters(BaseModel):
 
 
 class BarTypeLiters(BaseModel):
-    bar: str | None
+    bar: str  # bar name, joined from the bar referential
     values: tuple[TypeLiters, ...]
 
 

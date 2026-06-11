@@ -94,7 +94,7 @@ Table: `entry`
 | type | string(100) | Required (style: IPA, Stout…) |
 | volume | float | Required (mL) |
 | drink_datetime | datetime | Required |
-| bar | text | Optional (venue name, free text — not yet linked to `bar` table) |
+| bar_id | integer | FK → bar.id, required (id 1 = manual "Unknown bar" placeholder for pre-referential entries) |
 | rating | float | Optional, 0.0–5.0 |
 | notes | text | Optional |
 | created_at | datetime | Server default |
@@ -110,7 +110,7 @@ Table: `bar` (OSM referential — see "Bar referential" below)
 |---|---|---|
 | id | integer | PK, auto-increment |
 | osm_id | bigint | OSM element id |
-| osm_type | string(10) | `node` / `way` / `relation` — unique with osm_id |
+| osm_type | string(10) | `node` / `way` / `relation` — unique with osm_id. `manual` = seeded row not owned by OSM |
 | name | string(255) | Required (unnamed OSM elements are skipped) |
 | amenity | string(50) | `bar`, `pub`, `restaurant` |
 | latitude / longitude | float | Required |
@@ -129,7 +129,7 @@ Table: `bar` (OSM referential — see "Bar referential" below)
 - Sync is a **reconciliation**, not a re-import (`backend/scripts/sync_osm_bars.py`, run with `uv run python scripts/sync_osm_bars.py` from `backend/`):
   - in OSM, not in DB → insert
   - in both → update name / amenity / address / postcode / lat / lng if changed; reopen if it was closed
-  - in DB, not in OSM → `is_closed = true` (never delete — entries may reference the bar)
+  - in DB, not in OSM → `is_closed = true` (never delete — entries may reference the bar). Rows with `osm_type = "manual"` are never closed.
   - safety guard: abort without writing if OSM returns < 70% of the open bars currently in DB (protects against partial Overpass responses)
 - Network code (Overpass client) lives in `services/osm.py`; DB reconciliation in `services/bar.py` — keep them separate so the sync logic is testable without network.
 
@@ -151,6 +151,7 @@ frontend/src/
 │   └── Profile.tsx      # User profile / stats
 ├── components/
 │   ├── EntryForm.tsx    # Log entry form (fields)
+│   ├── BarAutocomplete.tsx # Bar picker backed by GET /bars (debounced search)
 │   ├── LogBeerModal.tsx # Modal wrapper around EntryForm
 │   ├── EntryCard.tsx    # Single entry display (with Cheers button)
 │   ├── VenueCard.tsx    # Venue grouping of entries in the feed

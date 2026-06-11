@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
+from app.models.bar import Bar
 from app.models.entry import Entry
 from app.schemas.entry import BarTypeLiters, DailyLiters, StatsSummary, TypeDailyLiters, TypeLiters
 
@@ -14,7 +15,10 @@ def get_stats_summary(db: Session, user_id: int) -> StatsSummary:
     week_ago = now - timedelta(days=7)
     month_ago = now - timedelta(days=30)
 
-    all_entries: list[Entry] = db.query(Entry).filter(Entry.user_id == user_id).all()
+    rows: list[tuple[Entry, str]] = (
+        db.query(Entry, Bar.name).join(Bar, Entry.bar_id == Bar.id).filter(Entry.user_id == user_id).all()
+    )
+    all_entries = [e for e, _ in rows]
 
     weekly_count = sum(1 for e in all_entries if e.drink_datetime >= week_ago)
     monthly_count = sum(1 for e in all_entries if e.drink_datetime >= month_ago)
@@ -37,10 +41,10 @@ def get_stats_summary(db: Session, user_id: int) -> StatsSummary:
         for t, vols in sorted(type_daily_volumes.items())
     )
 
-    bar_type_volumes: dict[str | None, dict[str, float]] = defaultdict(lambda: defaultdict(float))
-    for e in all_entries:
+    bar_type_volumes: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    for e, bar_name in rows:
         if e.type:
-            bar_type_volumes[e.bar][e.type] += e.volume
+            bar_type_volumes[bar_name][e.type] += e.volume
     liters_by_type = tuple(
         BarTypeLiters(
             bar=bar,
@@ -48,7 +52,7 @@ def get_stats_summary(db: Session, user_id: int) -> StatsSummary:
                 TypeLiters(type=t, liters=round(v / 1000, 3)) for t, v in sorted(vols.items(), key=lambda x: -x[1])
             ),
         )
-        for bar, vols in sorted(bar_type_volumes.items(), key=lambda x: (x[0] is None, x[0] or ""))
+        for bar, vols in sorted(bar_type_volumes.items())
     )
 
     return StatsSummary(
