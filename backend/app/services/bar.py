@@ -54,11 +54,9 @@ def sync_bars(db: Session, osm_elements: list[dict], city: str = "Paris", dry_ru
         else:
             counts["unchanged"] += 1
 
-    # Closing is city-scoped: a Paris sync says nothing about Lyon bars.
-    # Rows with osm_type="manual" (e.g. the "Unknown bar" placeholder seeded by
-    # the entry.bar_id migration) are not OSM-owned and are never closed.
+    # Closing is city-scoped: a Paris sync says nothing about Lyon bars
     for key, bar in db_by_key.items():
-        if bar.osm_type == "manual" or bar.city != city or key in osm_by_key:
+        if bar.city != city or key in osm_by_key:
             continue
         if bar.is_closed:
             counts["unchanged"] += 1
