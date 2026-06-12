@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, Route, Routes, useNavigate } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
 import Feed from "./pages/Feed";
 import Login from "./pages/Login";
+import MapPage from "./pages/Map";
 import Mates from "./pages/Mates";
 import Profile from "./pages/Profile";
 import Register from "./pages/Register";
@@ -32,6 +33,7 @@ function Nav() {
         <NavLink to={`/profile/${userId}`} className={navLinkClass} onClick={() => setMenuOpen(false)}>My Profile</NavLink>
       )}
       <NavLink to="/mates" className={navLinkClass} onClick={() => setMenuOpen(false)}>Mates</NavLink>
+      <NavLink to="/map" className={navLinkClass} onClick={() => setMenuOpen(false)}>Map</NavLink>
     </>
   );
 
@@ -87,40 +89,70 @@ function Nav() {
   );
 }
 
-export default function App() {
+function PaddedLayout() {
   return (
     <div className="min-h-screen bg-amber-50">
       <Nav />
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Feed />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/profile/:userId"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/mates"
-            element={
-              <ProtectedRoute>
-                <Mates />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+        <Outlet />
       </main>
     </div>
+  );
+}
+
+// Map page: no page chrome, the map fills everything below the navbar
+function FullBleedLayout() {
+  return (
+    <div className="h-dvh bg-amber-50 flex flex-col">
+      <Nav />
+      <main className="flex-1 min-h-0">
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route element={<FullBleedLayout />}>
+        <Route
+          path="/map"
+          element={
+            <ProtectedRoute>
+              <MapPage />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
+      <Route element={<PaddedLayout />}>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Feed />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/profile/:userId"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mates"
+          element={
+            <ProtectedRoute>
+              <Mates />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
+    </Routes>
   );
 }
