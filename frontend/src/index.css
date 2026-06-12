@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* OSM/CARTO require visible attribution: lift it above the map page's
+   collapsed bottom sheet on mobile (the sheet is hidden from sm: up) */
+@media (max-width: 639px) {
+  .leaflet-bottom.leaflet-right {
+    bottom: calc(3rem + env(safe-area-inset-bottom));
+  }
+}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AttributionControl, MapContainer, TileLayer, ZoomControl, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { getArrondissementMap, getVenueMap } from "../api/geo";
 import ArrondissementLayer from "../components/map/ArrondissementLayer";
@@ -62,16 +62,8 @@ export default function MapPage() {
 
   return (
     <div className="relative z-0 h-full w-full">
-      <MapContainer
-        center={PARIS_CENTER}
-        zoom={13}
-        zoomControl={false}
-        attributionControl={false}
-        className="h-full w-full"
-      >
-        <ZoomControl position="topright" />
-        {/* top-right, not bottom: the mobile bottom sheet would cover it, and OSM/CARTO require visible attribution */}
-        <AttributionControl position="topright" />
+      {/* no zoom control: scroll wheel / pinch zoom; attribution offset above the mobile sheet in index.css */}
+      <MapContainer center={PARIS_CENTER} zoom={13} zoomControl={false} className="h-full w-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
