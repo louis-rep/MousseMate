@@ -30,6 +30,37 @@ class TestSyncBars(BaseTestDatabase):
         self.assertEqual(counts["inserted"], 2)
         self.assertEqual(self.db.query(Bar).count(), 2)
 
+    def test_missing_postcode_is_derived_from_coordinates(self) -> None:
+        # element() coords are Notre-Dame -> 4th arrondissement
+        bar_service.sync_bars(self.db, [_element(postcode=None, latitude=48.8530, longitude=2.3499)])
+        self.assertEqual(self._get_bar().postcode, "75004")
+
+    def test_osm_postcode_wins_over_derivation(self) -> None:
+        bar_service.sync_bars(self.db, [_element(postcode="75005", latitude=48.8530, longitude=2.3499)])
+        self.assertEqual(self._get_bar().postcode, "75005")
+
+    def test_existing_bar_without_postcode_is_backfilled_on_next_sync(self) -> None:
+        self.db.add(
+            Bar(
+                osm_id=1,
+                osm_type="node",
+                name="Le Comptoir",
+                amenity="bar",
+                latitude=48.8530,
+                longitude=2.3499,
+                postcode=None,
+            )
+        )
+        self.db.commit()
+        counts = bar_service.sync_bars(self.db, [_element(postcode=None, latitude=48.8530, longitude=2.3499)])
+        self.assertEqual(counts["updated"], 1)
+        self.assertEqual(self._get_bar().postcode, "75004")
+
+    def test_bar_outside_polygons_keeps_null_postcode(self) -> None:
+        # La Défense — inside no arrondissement polygon
+        bar_service.sync_bars(self.db, [_element(postcode=None, latitude=48.8924, longitude=2.2361)])
+        self.assertIsNone(self._get_bar().postcode)
+
     def test_updates_changed_fields(self) -> None:
         bar_service.sync_bars(self.db, [_element()])
         counts = bar_service.sync_bars(self.db, [_element(name="Le Nouveau Comptoir", latitude=48.8567)])

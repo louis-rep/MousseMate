@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { MapScope } from "../../types/geo";
 
-export type MapView = "bars" | "heatmap";
+export type MapView = "bars" | "heatmap" | "arrondissements";
 
 const SCOPES: { value: MapScope; label: string }[] = [
   { value: "me", label: "Me" },
@@ -11,6 +11,7 @@ const SCOPES: { value: MapScope; label: string }[] = [
 const VIEWS: { value: MapView; label: string }[] = [
   { value: "bars", label: "Bars" },
   { value: "heatmap", label: "Heatmap" },
+  { value: "arrondissements", label: "Arrondissement" },
 ];
 
 interface MapPanelProps {
@@ -40,14 +41,6 @@ function ViewButtons({ view, onViewChange }: Pick<MapPanelProps, "view" | "onVie
           {v.label}
         </button>
       ))}
-      <button
-        disabled
-        title="Coming soon"
-        className={`${buttonClass} flex items-center justify-between gap-2 text-gray-400 cursor-not-allowed`}
-      >
-        Arrondissement
-        <span className="text-[10px] font-medium bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">soon</span>
-      </button>
     </>
   );
 }

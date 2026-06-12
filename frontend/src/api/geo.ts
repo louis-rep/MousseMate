@@ -1,4 +1,4 @@
-import type { MapScope, VenueMapResponse } from "../types/geo";
+import type { ArrondissementMapResponse, MapScope, VenueMapResponse } from "../types/geo";
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "/api";
 
@@ -23,4 +23,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function getVenueMap(scope: MapScope): Promise<VenueMapResponse> {
   return request<VenueMapResponse>(`/map/venues?scope=${scope}`);
+}
+
+export function getArrondissementMap(scope: MapScope): Promise<ArrondissementMapResponse> {
+  return request<ArrondissementMapResponse>(`/map/arrondissements?scope=${scope}`);
 }

@@ -24,3 +24,14 @@ export interface VenueMapResponse {
   scope: MapScope;
   venues: VenueMapPoint[];
 }
+
+export interface ArrondissementStat {
+  arrondissement: number; // 1-20
+  entry_count: number;
+  total_liters: number;
+}
+
+export interface ArrondissementMapResponse {
+  scope: MapScope;
+  arrondissements: ArrondissementStat[];
+}

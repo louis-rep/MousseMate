@@ -36,3 +36,14 @@ class VenueMapPoint(BaseModel):
 class VenueMapResponse(BaseModel):
     scope: MapScope
     venues: tuple[VenueMapPoint, ...]
+
+
+class ArrondissementStat(BaseModel):
+    arrondissement: int  # 1-20
+    entry_count: int
+    total_liters: float
+
+
+class ArrondissementMapResponse(BaseModel):
+    scope: MapScope
+    arrondissements: tuple[ArrondissementStat, ...]  # only arrondissements with entries

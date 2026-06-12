@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models.bar import Bar
 from app.schemas.bar import BarRead
+from app.services import arrondissement as arrondissement_service
 
 # Fields overwritten from OSM on every sync
 _SYNCED_FIELDS = ("name", "amenity", "latitude", "longitude", "address", "postcode", "city")
@@ -27,6 +28,13 @@ def sync_bars(db: Session, osm_elements: list[dict], city: str = "Paris", dry_ru
     - in both            -> update synced fields if changed; reopen if it was closed
     - in DB, not in OSM  -> is_closed = True (never delete — entries may reference the bar)
     """
+    # OSM only tags addr:postcode on ~27% of Paris bars — derive the rest from coordinates
+    # so the arrondissement view covers every bar. Existing rows backfill on their next sync.
+    # TODO(scale): the polygon asset is Paris-only, hence the city guard.
+    for element in osm_elements:
+        if element["postcode"] is None and element["city"] == "Paris":
+            element["postcode"] = arrondissement_service.postcode_for_point(element["latitude"], element["longitude"])
+
     osm_by_key = {(el["osm_type"], el["osm_id"]): el for el in osm_elements}
     # OSM ids are globally unique, so match across all cities — a boundary element
     # picked up by two city syncs must update, not violate uq_bar_osm_type_osm_id.
