@@ -1,12 +1,21 @@
 import { useState } from "react";
 import type { MapScope } from "../../types/geo";
 
+export type MapView = "bars" | "heatmap";
+
 const SCOPES: { value: MapScope; label: string }[] = [
   { value: "me", label: "Me" },
   { value: "mates", label: "My mates" },
 ];
 
+const VIEWS: { value: MapView; label: string }[] = [
+  { value: "bars", label: "Bars" },
+  { value: "heatmap", label: "Heatmap" },
+];
+
 interface MapPanelProps {
+  view: MapView;
+  onViewChange: (view: MapView) => void;
   scope: MapScope;
   onScopeChange: (scope: MapScope) => void;
 }
@@ -19,10 +28,18 @@ const activeClass = "bg-amber-600 text-white";
 const inactiveClass = "text-amber-800 hover:bg-amber-50";
 const buttonClass = "text-left text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors";
 
-function ViewButtons() {
+function ViewButtons({ view, onViewChange }: Pick<MapPanelProps, "view" | "onViewChange">) {
   return (
     <>
-      <button className={`${buttonClass} ${activeClass}`}>Bars</button>
+      {VIEWS.map((v) => (
+        <button
+          key={v.value}
+          onClick={() => onViewChange(v.value)}
+          className={`${buttonClass} ${view === v.value ? activeClass : inactiveClass}`}
+        >
+          {v.label}
+        </button>
+      ))}
       <button
         disabled
         title="Coming soon"
@@ -35,7 +52,7 @@ function ViewButtons() {
   );
 }
 
-function ScopeButtons({ scope, onScopeChange }: MapPanelProps) {
+function ScopeButtons({ scope, onScopeChange }: Pick<MapPanelProps, "scope" | "onScopeChange">) {
   return (
     <>
       {SCOPES.map((s) => (
@@ -51,8 +68,9 @@ function ScopeButtons({ scope, onScopeChange }: MapPanelProps) {
   );
 }
 
-export default function MapPanel({ scope, onScopeChange }: MapPanelProps) {
+export default function MapPanel({ view, onViewChange, scope, onScopeChange }: MapPanelProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const viewLabel = VIEWS.find((v) => v.value === view)?.label;
   const scopeLabel = SCOPES.find((s) => s.value === scope)?.label;
 
   return (
@@ -62,7 +80,7 @@ export default function MapPanel({ scope, onScopeChange }: MapPanelProps) {
         <div>
           <SectionLabel>View</SectionLabel>
           <div className="flex flex-col gap-1">
-            <ViewButtons />
+            <ViewButtons view={view} onViewChange={onViewChange} />
           </div>
         </div>
         <div>
@@ -82,7 +100,7 @@ export default function MapPanel({ scope, onScopeChange }: MapPanelProps) {
         >
           <span className="h-1 w-10 rounded-full bg-amber-200" />
           <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-800">
-            Bars · {scopeLabel}
+            {viewLabel} · {scopeLabel}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className={`h-3.5 w-3.5 transition-transform ${sheetOpen ? "rotate-180" : ""}`}
@@ -99,7 +117,7 @@ export default function MapPanel({ scope, onScopeChange }: MapPanelProps) {
             <div>
               <SectionLabel>View</SectionLabel>
               <div className="flex flex-wrap gap-1.5">
-                <ViewButtons />
+                <ViewButtons view={view} onViewChange={onViewChange} />
               </div>
             </div>
             <div>

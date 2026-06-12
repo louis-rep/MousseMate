@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { AttributionControl, MapContainer, TileLayer, ZoomControl, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { getVenueMap } from "../api/geo";
-import MapPanel from "../components/map/MapPanel";
+import HeatLayer from "../components/map/HeatLayer";
+import MapPanel, { type MapView } from "../components/map/MapPanel";
 import VenueMarker from "../components/map/VenueMarker";
 import type { MapScope, VenueMapPoint, VenueMapResponse } from "../types/geo";
 
@@ -21,6 +22,7 @@ function FitBounds({ venues }: { venues: VenueMapPoint[] }) {
 }
 
 export default function MapPage() {
+  const [view, setView] = useState<MapView>("bars");
   const [scope, setScope] = useState<MapScope>("mates");
   const [data, setData] = useState<VenueMapResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,9 +58,11 @@ export default function MapPage() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
-        {data?.venues.map((v) => (
-          <VenueMarker key={v.bar_id} venue={v} />
-        ))}
+        {view === "bars" &&
+          data?.venues.map((v) => (
+            <VenueMarker key={v.bar_id} venue={v} />
+          ))}
+        {view === "heatmap" && data && <HeatLayer venues={data.venues} />}
         {data && <FitBounds venues={data.venues} />}
       </MapContainer>
       {error && (
@@ -71,7 +75,7 @@ export default function MapPage() {
           No venues yet — log a beer to put it on the map!
         </div>
       )}
-      <MapPanel scope={scope} onScopeChange={setScope} />
+      <MapPanel view={view} onViewChange={setView} scope={scope} onScopeChange={setScope} />
     </div>
   );
 }
