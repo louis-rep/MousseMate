@@ -128,7 +128,7 @@ moussemate/
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | /health | Health check |
+<!-- | GET | /health | Health check | -->
 | POST | /api/v1/checkins | Log a new check-in |
 | GET | /api/v1/checkins | List check-ins |
 | GET | /api/v1/checkins/stats/summary | Get stats summary |
