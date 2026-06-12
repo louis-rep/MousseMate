@@ -1,5 +1,8 @@
 FROM python:3.12-slim
 
+# stream python output immediately — container logs must not lag behind reality
+ENV PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
 # Install uv

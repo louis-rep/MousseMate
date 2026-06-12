@@ -3,7 +3,7 @@ builder = "nixpacks"
 
 [deploy]
 # --no-sync: use the venv baked into the image; a plain `uv run` re-installs dev deps at boot
-startCommand = "uv run --no-sync alembic upgrade head && uv run --no-sync uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+startCommand = "echo BOOT: migrations starting && uv run --no-sync alembic upgrade head && echo BOOT: migrations done, starting uvicorn on port $PORT && uv run --no-sync uvicorn app.main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/health"
 # must cover migrations at boot; 30s killed the container mid-migration
 healthcheckTimeout = 300
