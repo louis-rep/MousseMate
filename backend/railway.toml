@@ -2,11 +2,11 @@
 builder = "nixpacks"
 
 [deploy]
-# call the image's venv binaries directly — `uv run --no-sync` hangs at boot on railway
-startCommand = "echo BOOT: migrations starting && .venv/bin/alembic upgrade head && echo BOOT: migrations done, starting uvicorn on port $PORT && .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port $PORT"
-# healthcheck gate disabled while debugging: deploy activates unconditionally so the
-# app is reachable from outside and we can probe /health ourselves
-# healthcheckPath = "/health"
-# healthcheckTimeout = 90
+# Boot (migrations + uvicorn) lives in start.sh, the image CMD. Do NOT set
+# startCommand here: railway execs it without a shell, so `a && b` chains
+# silently run only `a` and exit — the deploy "completes" with no server.
+healthcheckPath = "/health"
+# must cover migrations at boot (normal boot ~15s); short enough to fail fast
+healthcheckTimeout = 90
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
