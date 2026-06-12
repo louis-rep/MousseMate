@@ -203,6 +203,16 @@ frontend/src/
 
 ---
 
+## Deployment (Railway)
+
+Project `confident-ambition`: services **Backend** (root `/backend`, Dockerfile build), **frontend** (root `/frontend`, nixpacks + `vite preview`), **Postgres**. All in `us-west2` — keep API and DB in the same region.
+
+- App: https://frontend-production-5ba2.up.railway.app · API: https://backend-production-43d3.up.railway.app
+- **Backend boot lives in `backend/start.sh` (image CMD): migrations, then uvicorn.** Never set `startCommand` in railway.toml with `&&` chains — Railway execs it without a shell, only the first command runs, and the deploy "completes" with no server. This cost us a full day of debugging.
+- Frontend env `VITE_API_BASE_URL` is baked at build time — changing it (or the backend domain) requires a frontend redeploy. Backend `ALLOWED_ORIGINS` must list the frontend URL (JSON array).
+- Prod bar sync (idempotent): `cd backend && railway run --service Backend -- uv run python scripts/sync_osm_bars.py [--dry-run]`
+- `railway up` (CLI deploys) fails with "prefix not found" while service root directories have a leading slash (`/backend`); use push-to-deploy (note: trigger can lag minutes behind the push).
+
 ## Environment
 
 ```bash
